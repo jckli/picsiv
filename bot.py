@@ -16,7 +16,7 @@ for file in os.listdir("./cogs"):
 @bot.event
 async def on_ready():
     print(f"Bot is online")
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="pixiv"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="for pixiv links"))
 
 try:
     bot.run(os.environ.get("TOKEN"))
