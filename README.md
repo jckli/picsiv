@@ -1,6 +1,6 @@
 # pixiv-bot
 
-woo! another speedrun on a project! this project took me about 1 hour and 30 minutes to make. 
+woo! another speedrun project! this project took me about 1 hour and 30 minutes to make. 
 
 <details>
     <summary>proof</summary>
