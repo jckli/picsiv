@@ -28,12 +28,14 @@ def parse_pixiv(html):
     return imgbase["src"]
 
 def request_hibiapi(id):
-    response = requests.get(url=f"https://api.obfs.dev/api/pixiv/illust?id={id}")
+    response = requests.get(url=f"https://api.zettai.moe/api/pixiv/illust?id={id}")
     return response.text
 
 def parse_hibiapi(data):
     data = json.loads(data)
     illust = data["illust"]
+
+    # get images
     links = []
     if illust["meta_single_page"] != {}:
         links.append(illust["meta_single_page"]["original_image_url"])
@@ -42,4 +44,12 @@ def parse_hibiapi(data):
             links.append(i["image_urls"]["original"])
     else:
         return None
-    return links
+
+    # get level
+    if illust["sanity_level"] >= 5:
+        nsfw = True
+    else:
+        nsfw = False
+
+    result = {"nsfw": nsfw, "links": links}
+    return result
