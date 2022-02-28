@@ -42,7 +42,7 @@ class Commands(commands.Cog):
                     paginator.add_button(
                         pages.PaginatorButton("next", label=">", style=discord.ButtonStyle.green)
                     )
-                    await paginator.send(ctx)
+                    await paginator.send(ctx, reference=message, mention_author=False)
                 else:
                     embed = discord.Embed(title="Full pixiv Image", color=0x0096fa)
                     embed.set_image(url=mirlinks[0])
