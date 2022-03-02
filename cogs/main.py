@@ -19,13 +19,19 @@ class Commands(commands.Cog):
                 ctx = await self.bot.get_context(message)
                 pixivid = message.content.split("/artworks/")[1]
                 json = pixiv.request_hibiapi(pixivid)
-                links = pixiv.parse_hibiapi(json)
+                data = pixiv.parse_hibiapi(json)
+                channel = await discord.utils.get_or_fetch(message.guild, "channel", message.channel.id)
+                if data["nsfw"] is True:
+                    if channel.nsfw is False:
+                        embed = discord.Embed(title="NSFW", color=0x0096fa, description="This image is NSFW. Please resend the link in a NSFW channel to view this image.")
+                        await ctx.send(embed=embed, reference=message, mention_author=False)
+                        return
                 mirlinks = []
-                for i in links:
+                for i in data["links"]:
                     path = i.split("https://i.pximg.net/")[1]
                     mirimg = "https://pximg.jackli.dev/" + path
                     mirlinks.append(mirimg)
-                if len(links) > 1:
+                if len(data["links"]) > 1:
                     imgpages = []
                     for count, link in enumerate(mirlinks):
                         imgpages.append(discord.Embed(title=f"Full pixiv Image", color=0x0096fa))
