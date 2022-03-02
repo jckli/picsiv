@@ -46,7 +46,7 @@ def parse_hibiapi(data):
         return None
 
     # get level
-    if illust["sanity_level"] >= 5:
+    if illust["sanity_level"] >= 4:
         nsfw = True
     else:
         nsfw = False
