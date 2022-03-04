@@ -36,7 +36,7 @@ class Commands(commands.Cog):
                     for count, link in enumerate(mirlinks):
                         imgpages.append(discord.Embed(title=f"Full pixiv Image", color=0x0096fa))
                         imgpages[count].set_image(url=link)
-                    paginator = pages.Paginator(pages=imgpages, use_default_buttons=False, timeout=None)
+                    paginator = pages.Paginator(pages=imgpages, use_default_buttons=False, timeout=None, author_check=False)
                     paginator.add_button(
                         pages.PaginatorButton("prev", label="<", style=discord.ButtonStyle.red)
                     )
