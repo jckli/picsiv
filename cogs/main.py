@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, pages
 import validators
+import re
 from core import pixiv
 
 class Commands(commands.Cog):
@@ -14,10 +15,11 @@ class Commands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if validators.url(message.content) is True:
-            if "pixiv.net" and "artworks" in message.content:
+        if "pixiv.net" and "artworks" in message.content:
+            url = re.search("(?P<url>https?://[^\s]+)", message.content).group("url")
+            if validators.url(url) is True:
                 ctx = await self.bot.get_context(message)
-                pixivid = message.content.split("/artworks/")[1]
+                pixivid = url.split("/artworks/")[1]
                 json = pixiv.request_hibiapi(pixivid)
                 data = pixiv.parse_hibiapi(json)
                 channel = await discord.utils.get_or_fetch(message.guild, "channel", message.channel.id)
