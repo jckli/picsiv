@@ -34,3 +34,16 @@ theres no commands, just send a pixiv link and it will automatically send the fu
 <img src="https://cdn.hayasaka.moe/cknu8ebhssnt.jpg" />
 
 **WE LIKE THIS WOOOOOOO!!!!!**
+
+## setup
+
+1. create discord bot from the [Discord Developer Portal](https://discord.com/developers/applications/) website and save the token
+2. clone this repository
+3. go into the folder and create a .env file with the following contents:
+```
+TOKEN=your_token_here
+```
+*your_token_here should be replaced with your own token from step 1*
+
+4. open terminal and run `pip install -r requirements.txt`
+5. run the bot with `python -u bot.py`
