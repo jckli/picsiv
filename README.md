@@ -7,6 +7,12 @@ woo! another speedrun project! this project took me about 1 hour and 30 minutes 
     <img src="https://cdn.hayasaka.moe/5dtw2vdd1jzg.jpg" />
 </details>
 
+## invite link
+
+https://discord.com/oauth2/authorize?client_id=947361674703302738&scope=applications.commands%20bot&permissions=3072
+
+*i forgot to update this readme even after it was hosted lol*
+
 ## features
 
 it simply sends the full quality image of the pixiv link. because pixiv original embeds only send half of the image, as well as because their image cdn forbids people from sending the raw image link, i made this bot lol.
