@@ -16,7 +16,11 @@ class Commands(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if "pixiv.net" and "artworks" in message.content:
-            url = re.search("(?P<url>https?://[^\s]+)", message.content).group("url")
+            urlRaw = re.search("(?P<url>https?://[^\s]+)", message.content)
+            if urlRaw == None:
+                return
+            else:
+                url = urlRaw.group("url")
             if validators.url(url) is True:
                 ctx = await self.bot.get_context(message)
                 pixivid = url.split("/artworks/")[1]
