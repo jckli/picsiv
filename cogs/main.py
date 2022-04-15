@@ -8,11 +8,6 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name="help", guild_ids=[721216108668911636])
-    async def help(self, ctx):
-        embed = discord.Embed(title="Help", color=0x0096fa, description="There are no commands! Simply send a pixiv link and I will send the full image.")
-        await ctx.respond(embed=embed)
-
     @commands.Cog.listener()
     async def on_message(self, message):
         if "pixiv.net" and "artworks" in message.content:
