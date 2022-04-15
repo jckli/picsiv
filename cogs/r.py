@@ -42,5 +42,20 @@ class Reddit(commands.Cog):
         embed.set_footer(text="Powered by https://animehoodies.jackli.dev/")
         await ctx.respond(embed=embed)
 
+    @commands.slash_command(name="animewallpaper")
+    async def animewallpaper(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
+        rs = r_utils.randomString(length=6)
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        try:
+            img = r_utils.requestimg(f"https://aniwp.jackli.dev/api?_={rs}{timeperiodstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
+        embed = discord.Embed(title="r/animehoodies", url="https://www.reddit.com/r/animewallpaper/", color=0x0096fa)
+        embed.set_image(url=img["imglink"])
+        embed.set_footer(text="Powered by https://aniwp.jackli.dev/")
+        await ctx.respond(embed=embed)
+
 def setup(bot):
     bot.add_cog(Reddit(bot))
