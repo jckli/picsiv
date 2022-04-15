@@ -12,6 +12,7 @@ class Information(commands.Cog):
         embed.add_field(name="streetmoe", value="Get a random image from r/streetmoe", inline=False)
         embed.add_field(name="animehoodies", value="Get a random image from r/animehoodies", inline=False)
         embed.add_field(name="animewallpaper", value="Get a random image from r/animewallpaper", inline=False)
+        embed.add_field(name="moescape", value="Get a random image from r/moescape", inline=False)
         await ctx.respond(embed=embed)
 
 def setup(bot):
