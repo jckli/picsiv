@@ -12,7 +12,7 @@ class Reddit(commands.Cog):
     async def get_timeperiods(ctx: discord.AutocompleteContext):
         return [tp for tp in timeperiods if tp.startswith(ctx.value.lower())]
 
-    @commands.slash_command(name="streetmoe", serverids=[721216108668911636])
+    @commands.slash_command(name="streetmoe")
     async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period:", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         img = ""
