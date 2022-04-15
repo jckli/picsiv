@@ -7,7 +7,9 @@ class Information(commands.Cog):
 
     @commands.slash_command(name="help")
     async def help(self, ctx):
-        embed = discord.Embed(title="Help", color=0x0096fa, description="There are no commands! Simply send a pixiv link and I will send the full image.")
+        embed = discord.Embed(title="Picsiv Commands", color=0x0096fa)
+        embed.add_field(name="help", value="Shows this message.", inline=False)
+        embed.add_field(name="streetmoe", value="Get a random image from r/streetmoe", inline=False)
         await ctx.respond(embed=embed)
 
 def setup(bot):
