@@ -13,7 +13,7 @@ class Reddit(commands.Cog):
         return [tp for tp in timeperiods if tp.startswith(ctx.value.lower())]
 
     @commands.slash_command(name="streetmoe")
-    async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period:", autocomplete=get_timeperiods) = None):
+    async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         img = ""
         if timeperiod is None:
@@ -26,7 +26,7 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animehoodies")
-    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period:", autocomplete=get_timeperiods) = None):
+    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         img = ""
         if timeperiod is None:
