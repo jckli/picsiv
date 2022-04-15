@@ -10,6 +10,7 @@ class Information(commands.Cog):
         embed = discord.Embed(title="Picsiv Commands", color=0x0096fa)
         embed.add_field(name="help", value="Shows this message.", inline=False)
         embed.add_field(name="streetmoe", value="Get a random image from r/streetmoe", inline=False)
+        embed.add_field(name="animehoodies", value="Get a random image from r/animehoodies", inline=False)
         await ctx.respond(embed=embed)
 
 def setup(bot):

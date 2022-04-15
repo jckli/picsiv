@@ -25,5 +25,18 @@ class Reddit(commands.Cog):
         embed.set_footer(text="Powered by https://streetmoe.jackli.dev/")
         await ctx.respond(embed=embed)
 
+    @commands.slash_command(name="animehoodies")
+    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period:", autocomplete=get_timeperiods) = None):
+        rs = r_utils.randomString(length=6)
+        img = ""
+        if timeperiod is None:
+            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}")
+        else:
+            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}&t={timeperiod}")
+        embed = discord.Embed(title="r/animehoodies", url="https://www.reddit.com/r/animehoodies/", color=0x0096fa)
+        embed.set_image(url=img["imglink"])
+        embed.set_footer(text="Powered by https://animehoodies.jackli.dev/")
+        await ctx.respond(embed=embed)
+
 def setup(bot):
     bot.add_cog(Reddit(bot))
