@@ -15,11 +15,13 @@ class Reddit(commands.Cog):
     @commands.slash_command(name="streetmoe")
     async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
-        img = ""
-        if timeperiod is None:
-            img = r_utils.requestimg(f"https://streetmoe.jackli.dev/api?_={rs}")
-        else:
-            img = r_utils.requestimg(f"https://streetmoe.jackli.dev/api?_={rs}&t={timeperiod}")
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        try:
+            img = r_utils.requestimg(f"https://streetmoe.jackli.dev/api?_={rs}{timeperiodstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
         embed = discord.Embed(title="r/streetmoe", url="https://www.reddit.com/r/streetmoe/", color=0x0096fa)
         embed.set_image(url=img["imglink"])
         embed.set_footer(text="Powered by https://streetmoe.jackli.dev/")
@@ -28,11 +30,13 @@ class Reddit(commands.Cog):
     @commands.slash_command(name="animehoodies")
     async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
-        img = ""
-        if timeperiod is None:
-            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}")
-        else:
-            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}&t={timeperiod}")
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        try:
+            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}{timeperiodstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
         embed = discord.Embed(title="r/animehoodies", url="https://www.reddit.com/r/animehoodies/", color=0x0096fa)
         embed.set_image(url=img["imglink"])
         embed.set_footer(text="Powered by https://animehoodies.jackli.dev/")
