@@ -10,7 +10,7 @@ class InfoButtons(discord.ui.View):
     def __init__(self, support_server, github):
         super().__init__()
         self.add_item(discord.ui.Button(label="Support Server", url=support_server))
-        self.add_item(discord.ui.Button(label="GitHub", url=support_server))
+        self.add_item(discord.ui.Button(label="GitHub", url=github))
 
 class Information(commands.Cog):
     def __init__(self, bot):
@@ -42,7 +42,7 @@ class Information(commands.Cog):
             description=f"Thanks for using Picsiv bot! Any questions can be brought up in the support server. This bot is also open-source! All code can be found on GitHub (Please leave a star ⭐ if you enjoy the bot).\n\n**Server Count:** {len(self.bot.guilds)}\n**Bot Users:** {botUsers}\n**Bot Uptime:** {uptime}"
         )
         botinfo.set_author(name="Picsiv", icon_url=self.bot.user.avatar.url)
-        await ctx.respond(embed=botinfo, ephemeral=True, view=InfoButtons("https://discord.gg/UcYspqftTF", "https://github.com/jckli/picsiv"))
+        await ctx.respond(embed=botinfo, view=InfoButtons("https://discord.gg/UcYspqftTF", "https://github.com/jckli/picsiv"))
 
 def setup(bot):
     bot.add_cog(Information(bot))
