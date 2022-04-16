@@ -5,7 +5,7 @@ import os
 
 dotenv.load_dotenv()
 
-bot = commands.Bot(intents=discord.Intents(message_content=True, messages=True))
+bot = commands.Bot(intents=discord.Intents(message_content=True, messages=True, guilds=True))
 bot.remove_command("help")
 
 for file in os.listdir("./cogs"):
