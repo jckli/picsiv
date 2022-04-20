@@ -52,7 +52,7 @@ class Reddit(commands.Cog):
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
             return
-        embed = discord.Embed(title="r/animehoodies", url="https://www.reddit.com/r/animewallpaper/", color=0x0096fa)
+        embed = discord.Embed(title="r/animewallpaper", url="https://www.reddit.com/r/animewallpaper/", color=0x0096fa)
         embed.set_image(url=img["imglink"])
         embed.set_footer(text="Powered by https://aniwp.jackli.dev/")
         await ctx.respond(embed=embed)
