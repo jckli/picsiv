@@ -20,16 +20,16 @@ class Information(commands.Cog):
     async def help(self, ctx):
         embed = discord.Embed(title="Picsiv Commands", color=0x0096fa,
             description="""
-                picsiv: Displays basic information about Picsiv.\n
-                help: Shows this message.
+                **picsiv**: Displays basic information about Picsiv.
+                **help**: Shows this message.
             """)
         embed.add_field(name="__Reddit__", 
             value="""
-                streetmoe: Gets a random image from r/streetmoe.\n
-                animehoodies: Gets a random image from r/animehoodies.\n
-                animewallpaper: Gets a random image from r/animewallpaper.\n
-                moescape: Gets a random image from r/moescape.\n
-                wholesomeyuri: Gets a random image from r/wholesomeyuri.\n
+                **streetmoe**: Gets a random image from r/streetmoe.
+                **animehoodies**: Gets a random image from r/animehoodies.
+                **animewallpaper**: Gets a random image from r/animewallpaper.
+                **moescape**: Gets a random image from r/moescape.
+                **wholesomeyuri**: Gets a random image from r/wholesomeyuri.
             """, inline=False)
         await ctx.respond(embed=embed)
 
