@@ -13,7 +13,7 @@ class Reddit(commands.Cog):
         return [tp for tp in timeperiods if tp.startswith(ctx.value.lower())]
 
     @commands.slash_command(name="streetmoe", description="Gets a random image from r/streetmoe")
-    async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
+    async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -28,7 +28,7 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animehoodies", description="Gets a random image from r/animehoodies")
-    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
+    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -43,7 +43,7 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animewallpaper", description="Gets a random image from r/animewallpaper")
-    async def animewallpaper(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
+    async def animewallpaper(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -58,7 +58,7 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="moescape", description="Gets a random image from r/moescape")
-    async def moescape(self, ctx, timeperiod: Option(str, "Pick a time period.", autocomplete=get_timeperiods) = None):
+    async def moescape(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
