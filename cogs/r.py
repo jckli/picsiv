@@ -72,5 +72,20 @@ class Reddit(commands.Cog):
         embed.set_footer(text="Powered by https://moescape.jackli.dev/")
         await ctx.respond(embed=embed)
 
+    @commands.slash_command(name="wholesomeyuri", description="Gets a random image from r/wholesomeyuri")
+    async def wholesomeyuri(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        rs = r_utils.randomString(length=6)
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        try:
+            img = r_utils.requestimg(f"https://wsyuri.jackli.dev/api?_={rs}{timeperiodstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
+        embed = discord.Embed(title="r/wholesomeyuri", url="https://www.reddit.com/r/wholesomeyuri/", color=0x0096fa)
+        embed.set_image(url=img["imglink"])
+        embed.set_footer(text="Powered by https://wsyuri.jackli.dev/")
+        await ctx.respond(embed=embed)
+    
 def setup(bot):
     bot.add_cog(Reddit(bot))

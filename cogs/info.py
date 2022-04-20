@@ -28,7 +28,8 @@ class Information(commands.Cog):
                 streetmoe: Gets a random image from r/streetmoe.\n
                 animehoodies: Gets a random image from r/animehoodies.\n
                 animewallpaper: Gets a random image from r/animewallpaper.\n
-                moescape: Gets a random image from r/moescape.
+                moescape: Gets a random image from r/moescape.\n
+                wholesomeyuri: Gets a random image from r/wholesomeyuri.\n
             """, inline=False)
         await ctx.respond(embed=embed)
 
