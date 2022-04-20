@@ -18,13 +18,18 @@ class Information(commands.Cog):
 
     @commands.slash_command(name="help", description="Displays all commands for Picsiv")
     async def help(self, ctx):
-        embed = discord.Embed(title="Picsiv Commands", color=0x0096fa)
-        embed.add_field(name="help", value="Shows this message.", inline=False)
-        embed.add_field(name="picsiv", value="Displays basic information about Picsiv.", inline=False)
-        embed.add_field(name="streetmoe", value="Gets a random image from r/streetmoe.", inline=False)
-        embed.add_field(name="animehoodies", value="Gets a random image from r/animehoodies.", inline=False)
-        embed.add_field(name="animewallpaper", value="Gets a random image from r/animewallpaper.", inline=False)
-        embed.add_field(name="moescape", value="Gets a random image from r/moescape.", inline=False)
+        embed = discord.Embed(title="Picsiv Commands", color=0x0096fa,
+            description="""
+                picsiv: Displays basic information about Picsiv.\n
+                help: Shows this message.
+            """)
+        embed.add_field(name="__Reddit__", 
+            value="""
+                streetmoe: Gets a random image from r/streetmoe.\n
+                animehoodies: Gets a random image from r/animehoodies.\n
+                animewallpaper: Gets a random image from r/animewallpaper.\n
+                moescape: Gets a random image from r/moescape.
+            """, inline=False)
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="picsiv", description="Displays basic information about Picsiv")
