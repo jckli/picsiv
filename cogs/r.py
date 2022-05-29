@@ -99,7 +99,22 @@ class Reddit(commands.Cog):
             return
         embed = discord.Embed(title="r/awwnime", url="https://www.reddit.com/r/awwnime/", color=0x0096fa)
         embed.set_image(url=img["imglink"])
-        embed.set_footer(text="Powered by https://awwnime.jackli.dev.jackli.dev/")
+        embed.set_footer(text="Powered by https://awwnime.jackli.dev")
+        await ctx.respond(embed=embed)
+
+    @commands.slash_command(name="animeirl", description="Gets a random image from r/anime_irl")
+    async def animeirl(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        rs = r_utils.randomString(length=6)
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        try:
+            img = r_utils.requestimg(f"https://animeirl.jackli.dev/api?_={rs}{timeperiodstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
+        embed = discord.Embed(title="r/anime_irl", url="https://www.reddit.com/r/anime_irl/", color=0x0096fa)
+        embed.set_image(url=img["imglink"])
+        embed.set_footer(text="Powered by https://animeirl.jackli.dev")
         await ctx.respond(embed=embed)
     
 def setup(bot):
