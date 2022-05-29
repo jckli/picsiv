@@ -14,6 +14,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="streetmoe", description="Gets a random image from r/streetmoe")
     async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -29,6 +30,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="animehoodies", description="Gets a random image from r/animehoodies")
     async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -44,6 +46,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="animewallpaper", description="Gets a random image from r/animewallpaper")
     async def animewallpaper(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -59,6 +62,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="moescape", description="Gets a random image from r/moescape")
     async def moescape(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -74,6 +78,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="wholesomeyuri", description="Gets a random image from r/wholesomeyuri")
     async def wholesomeyuri(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -89,6 +94,7 @@ class Reddit(commands.Cog):
     
     @commands.slash_command(name="awwnime", description="Gets a random image from r/awwnime")
     async def awwnime(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
@@ -104,6 +110,7 @@ class Reddit(commands.Cog):
 
     @commands.slash_command(name="animeirl", description="Gets a random image from r/anime_irl")
     async def animeirl(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+        await ctx.defer()
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
         try:
