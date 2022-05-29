@@ -9,7 +9,7 @@ woo! another speedrun project! this project took me about 1 hour and 30 minutes 
 
 ## invite link
 
-https://discord.com/oauth2/authorize?client_id=947361674703302738&scope=applications.commands%20bot&permissions=3072
+https://jackli.dev/picsiv
 
 *i forgot to update this readme even after it was hosted lol*
 
