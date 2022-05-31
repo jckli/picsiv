@@ -13,12 +13,25 @@ class Reddit(commands.Cog):
         return [tp for tp in timeperiods if tp.startswith(ctx.value.lower())]
 
     @commands.slash_command(name="streetmoe", description="Gets a random image from r/streetmoe")
-    async def streetmoe(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def streetmoe(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None, 
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://streetmoe.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://streetmoe.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -29,12 +42,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animehoodies", description="Gets a random image from r/animehoodies")
-    async def animehoodies(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def animehoodies(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://animehoodies.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -45,12 +71,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animewallpaper", description="Gets a random image from r/animewallpaper")
-    async def animewallpaper(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def animewallpaper(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://aniwp.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://aniwp.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -61,12 +100,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="moescape", description="Gets a random image from r/moescape")
-    async def moescape(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def moescape(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://moescape.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://moescape.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -77,12 +129,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="wholesomeyuri", description="Gets a random image from r/wholesomeyuri")
-    async def wholesomeyuri(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def wholesomeyuri(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://wsyuri.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://wsyuri.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -93,12 +158,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
     
     @commands.slash_command(name="awwnime", description="Gets a random image from r/awwnime")
-    async def awwnime(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def awwnime(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://awwnime.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://awwnime.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
@@ -109,12 +187,25 @@ class Reddit(commands.Cog):
         await ctx.respond(embed=embed)
 
     @commands.slash_command(name="animeirl", description="Gets a random image from r/anime_irl")
-    async def animeirl(self, ctx, timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None):
+    async def animeirl(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
         await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
         rs = r_utils.randomString(length=6)
         timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
         try:
-            img = r_utils.requestimg(f"https://animeirl.jackli.dev/api?_={rs}{timeperiodstring}")
+            img = r_utils.requestimg(f"https://animeirl.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
