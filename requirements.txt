@@ -1,4 +1,4 @@
-git+https://github.com/Pycord-Development/pycord.git
+py-cord==2.0.0rc1
 python-dotenv
 requests
 beautifulsoup4

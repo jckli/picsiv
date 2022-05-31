@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+py-cord = "==2.0.0rc1"
+python-dotenv = "*"
+requests = "*"
+beautifulsoup4 = "*"
+validators = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
