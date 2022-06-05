@@ -30,6 +30,8 @@ class Information(commands.Cog):
                 **animewallpaper**: Gets a random image from r/animewallpaper.
                 **moescape**: Gets a random image from r/moescape.
                 **wholesomeyuri**: Gets a random image from r/wholesomeyuri.
+                **awwnime**: Gets a random image from r/awwnime.
+                **animeirl**: Gets a random image from r/anime_irl.
             """, inline=False)
         await ctx.respond(embed=embed)
 
