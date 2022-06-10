@@ -32,6 +32,7 @@ class Information(commands.Cog):
                 **wholesomeyuri**: Gets a random image from r/wholesomeyuri.
                 **awwnime**: Gets a random image from r/awwnime.
                 **animeirl**: Gets a random image from r/anime_irl.
+                **saltsanime**: Gets a random image from r/SaltsAnime.
             """, inline=False)
         await ctx.respond(embed=embed)
 
