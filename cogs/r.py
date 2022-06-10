@@ -214,6 +214,35 @@ class Reddit(commands.Cog):
         embed.set_image(url=img["imglink"])
         embed.set_footer(text="Powered by https://animeirl.jackli.dev")
         await ctx.respond(embed=embed)
+
+    @commands.slash_command(name="saltsanime", description="Gets a random image from r/SaltsAnime")
+    async def saltsanime(self, ctx, 
+        timeperiod: Option(str, "Pick a time period", autocomplete=get_timeperiods) = None,
+        nsfw: Option(bool, "NSFW?") = None
+    ):
+        await ctx.defer()
+        channelnsfw = ctx.channel.is_nsfw()
+        if nsfw and not channelnsfw:
+            nsfwEmbed = discord.Embed(title="NSFW", color=0x0096fa, description="This channel is not NSFW. Please switch to an NSFW channel to use the NSFW true option.")
+            await ctx.respond(embed=nsfwEmbed)
+            return
+        elif channelnsfw and nsfw is None:
+            nsfw = True 
+        elif not channelnsfw and nsfw is None:
+            nsfw = False
+        rs = r_utils.randomString(length=6)
+        timeperiodstring = f"&t={timeperiod}" if timeperiod is not None else ""
+        nsfwstring = f"&nsfw={nsfw}"
+        try:
+            img = r_utils.requestimg(f"https://saltsanime.jackli.dev/api?_={rs}{timeperiodstring}{nsfwstring}")
+        except:
+            errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
+            await ctx.respond(embed=errorEmbed)
+            return
+        embed = discord.Embed(title="r/SaltsAnime", url="https://www.reddit.com/r/SaltsAnime/", color=0x0096fa)
+        embed.set_image(url=img["imglink"])
+        embed.set_footer(text="Powered by https://saltsanime.jackli.dev")
+        await ctx.respond(embed=embed)
     
 def setup(bot):
     bot.add_cog(Reddit(bot))
