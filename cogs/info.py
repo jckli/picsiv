@@ -25,6 +25,10 @@ class Information(commands.Cog):
             """)
         embed.add_field(name="__Reddit__", 
             value="""
+                **sugoiart**: Gets a random image from the sugoiart API.
+            """, inline=False)
+        embed.add_field(name="__Reddit__", 
+            value="""
                 **streetmoe**: Gets a random image from r/streetmoe.
                 **animehoodies**: Gets a random image from r/animehoodies.
                 **animewallpaper**: Gets a random image from r/animewallpaper.
