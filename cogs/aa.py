@@ -18,7 +18,7 @@ class ArtApis(commands.Cog):
         rs = r_utils.randomString(length=6)
         orientationstring = f"&orien={orientation}" if orientation is not None else ""
         try:
-            img = r_utils.requestimg(f"https://art.hayasaka.moe/api/art/random?_={rs}{orientationstring}")
+            img = r_utils.requestimg(f"https://sugoiapi.hayasaka.moe/v1/art/random?_={rs}{orientationstring}")
         except:
             errorEmbed = discord.Embed(title="Error", url="Could not get image from API. Please try again.", color=0xff524f)
             await ctx.respond(embed=errorEmbed)
