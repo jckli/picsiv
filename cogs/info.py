@@ -37,6 +37,7 @@ class Information(commands.Cog):
                 **awwnime**: Gets a random image from r/awwnime.
                 **animeirl**: Gets a random image from r/anime_irl.
                 **saltsanime**: Gets a random image from r/SaltsAnime.
+                **megane**: Gets a random image from r/megane.
             """, inline=False)
         await ctx.respond(embed=embed)
 
