@@ -38,6 +38,7 @@ class Information(commands.Cog):
                 **animeirl**: Gets a random image from r/anime_irl.
                 **saltsanime**: Gets a random image from r/SaltsAnime.
                 **megane**: Gets a random image from r/megane.
+                **imaginarymaids**: Gets a random image from r/ImaginaryMaids.
             """, inline=False)
         await ctx.respond(embed=embed)
 
