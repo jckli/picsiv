@@ -11,7 +11,7 @@ class Commands(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if "pixiv.net" and "artworks" in message.content:
-            urlRaw = re.search("(?P<url>https?://[^\s]+)", message.content)
+            urlRaw = re.search("(?P<url>https?://[^\s]+\d)", message.content)
             if urlRaw == None:
                 return
             else:
