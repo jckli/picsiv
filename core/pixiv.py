@@ -28,7 +28,7 @@ def parse_pixiv(html):
     return imgbase["src"]
 
 def request_hibiapi(id):
-    response = requests.get(url=f"https://api.zettai.moe/api/pixiv/illust?id={id}")
+    response = requests.get(url=f"https://hibiapi.umia.moe/api/pixiv/illust?id={id}")
     return response.text
 
 def parse_hibiapi(data):
