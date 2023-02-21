@@ -31,9 +31,9 @@ class Commands(commands.Cog):
                 if data["ugoria"] is True:
                     ugoria = pixiv.parse_ugoria(pixivid)
                     ugoria.seek(0)
-                    file = discord.File(fp=ugoria, filename="ugoria.gif")
+                    file = discord.File(fp=ugoria, filename=f"{pixivid}.gif")
                     embed = discord.Embed(title="Full pixiv Ugoria", color=0x0096fa)
-                    embed.set_image(url="attachment://ugoria.gif")
+                    embed.set_image(url=f"attachment://{pixivid}.gif")
                     await message.channel.send(file=file, embed=embed, reference=message, mention_author=False)
                     return
                 mirlinks = []
