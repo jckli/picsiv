@@ -9,6 +9,7 @@ python-dotenv = "*"
 requests = "*"
 beautifulsoup4 = "*"
 validators = "*"
+imageio = "*"
 
 [dev-packages]
 

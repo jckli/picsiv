@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, pages
 import validators
 import re
+import io
 from core import pixiv
 
 class Commands(commands.Cog):
@@ -27,6 +28,14 @@ class Commands(commands.Cog):
                         embed = discord.Embed(title="NSFW", color=0x0096fa, description="This image is NSFW. Please resend the link in a NSFW channel to view this image.")
                         await ctx.send(embed=embed, reference=message, mention_author=False)
                         return
+                if data["ugoria"] is True:
+                    ugoria = pixiv.parse_ugoria(pixivid)
+                    ugoria.seek(0)
+                    file = discord.File(fp=ugoria, filename="ugoria.gif")
+                    embed = discord.Embed(title="Full pixiv Ugoria", color=0x0096fa)
+                    embed.set_image(url="attachment://ugoria.gif")
+                    await message.channel.send(file=file, embed=embed, reference=message, mention_author=False)
+                    return
                 mirlinks = []
                 for i in data["links"]:
                     path = i.split("https://i.pximg.net/")[1]
