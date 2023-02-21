@@ -1,6 +1,10 @@
 from bs4 import BeautifulSoup as bs
 import requests
 import json
+import io
+import zipfile
+import imageio.v3 as imageio
+import urllib3
 
 def request_pixiv(url):
     headers = {
@@ -31,9 +35,18 @@ def request_hibiapi(id):
     response = requests.get(url=f"https://hibiapi.hayasaka.moe/api/pixiv/illust?id={id}")
     return response.text
 
+def request_hibiapi_ugoria(id):
+    response = requests.get(url=f"https://hibiapi.hayasaka.moe/api/pixiv/ugoira_metadata?id={id}")
+    return response.text
+
 def parse_hibiapi(data):
     data = json.loads(data)
     illust = data["illust"]
+
+    # check if ugoria
+    ugoria = False
+    if illust["type"] == "ugoira":
+        ugoria = True
 
     # get images
     links = []
@@ -51,5 +64,31 @@ def parse_hibiapi(data):
     else:
         nsfw = False
 
-    result = {"nsfw": nsfw, "links": links}
+    result = {"nsfw": nsfw, "links": links, "ugoria": ugoria}
     return result
+
+def parse_ugoria(id):
+    ugoria_data = request_hibiapi_ugoria(id)
+    ugoria_json = json.loads(ugoria_data)
+    ugoria = ugoria_json["ugoira_metadata"]
+
+    raw_zip_link = ugoria["zip_urls"]["medium"]
+    path = raw_zip_link.split("https://i.pximg.net/")[1]
+    mirpath = "https://pximg.jackli.dev/" + path
+
+    http = urllib3.PoolManager()
+
+    zip_resp = http.request("GET", mirpath)
+    zip_file = zipfile.ZipFile(io.BytesIO(zip_resp.data))
+
+    frame_count = len(ugoria["frames"])
+    total_delay = sum(frame["delay"] for frame in ugoria["frames"])
+    dur = total_delay / frame_count
+
+    gif = io.BytesIO()
+    images = []
+    for name in zip_file.namelist():
+        images.append(imageio.imread(zip_file.open(name)))
+    imageio.imwrite(gif, images, extension=".gif", duration=dur, loop=0)
+
+    return gif
