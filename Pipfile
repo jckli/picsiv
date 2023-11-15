@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-py-cord = "==2.0.0rc1"
 python-dotenv = "*"
 requests = "*"
 beautifulsoup4 = "*"
 validators = "*"
 imageio = "*"
+py-cord = {git = "git+https://github.com/Pycord-Development/pycord"}
 
 [dev-packages]
 
