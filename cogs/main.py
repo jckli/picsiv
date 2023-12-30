@@ -63,6 +63,22 @@ class Commands(commands.Cog):
                     embed = discord.Embed(title="Full pixiv Image", color=0x0096fa)
                     embed.set_image(url=mirlinks[0])
                     await message.channel.send(embed=embed, reference=message, mention_author=False)
+        if "twitter.com" or "x.com" in message.content:
+            if message.author == self.bot.user:
+                return
+            urlRaw = re.search("(?P<url>https?://[^\s]+\d)", message.content)
+            if urlRaw == None:
+                return
+            else:
+                url = urlRaw.group("url")
+            if validators.url(url) is True:
+                ctx = await self.bot.get_context(message)
+                if "x.com" in url:
+                    newUrl = re.sub("x.com", "vxtwitter.com", url)
+                else:
+                    newUrl = re.sub("twitter.com", "vxtwitter.com", url)
+                await message.channel.send(newUrl, reference=message, mention_author=False)
+
 
 def setup(bot):
     bot.add_cog(Commands(bot))

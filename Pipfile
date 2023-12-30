@@ -9,7 +9,7 @@ requests = "*"
 beautifulsoup4 = "*"
 validators = "*"
 imageio = "*"
-py-cord = {git = "git+https://github.com/Pycord-Development/pycord"}
+py-cord = {git = "git+https://github.com/Pycord-Development/pycord.git"}
 
 [dev-packages]
 
