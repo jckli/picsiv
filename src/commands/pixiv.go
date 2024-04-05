@@ -47,10 +47,9 @@ func OnMessageCreate(e *events.MessageCreate) {
 		if len(id) < 2 {
 			return
 		}
-		fmt.Println("id: ", id[1])
 
 		illustResp, err := utils.RequestHibiApiIllust(id[1])
-		if err != nil || illustResp == nil {
+		if err != nil || illustResp.Error != nil {
 			return
 		}
 		illust, ok := utils.ParseHibiApiIllust(illustResp)
@@ -66,7 +65,22 @@ func OnMessageCreate(e *events.MessageCreate) {
 			}
 
 			ugoira, err := utils.ParseHibiApiUgoira(ugoiraResp)
-			_ = discord.NewFile("ugoira.zip", "ugoria gif", ugoira)
+			file := discord.NewFile("ugoira.gif", "ugoira", ugoira)
+			embed := discord.NewEmbedBuilder().
+				SetTitle("Full Pixiv Ugoira").
+				SetColor(0x0096fa).
+				SetImage("attachment://ugoira.gif").
+				Build()
+			e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
+				Embeds: []discord.Embed{embed},
+				Files:  []*discord.File{file},
+				MessageReference: &discord.MessageReference{
+					MessageID: &e.Message.ID,
+				},
+				AllowedMentions: &discord.AllowedMentions{
+					RepliedUser: false,
+				},
+			})
 			return
 		} else {
 			fmt.Println("image detected")

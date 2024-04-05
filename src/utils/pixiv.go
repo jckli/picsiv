@@ -15,6 +15,7 @@ import (
 )
 
 type HibiApiIllustResponse struct {
+	Error  interface{} `json:"error"`
 	Illust struct {
 		ID        int64  `json:"id"`
 		Title     string `json:"title"`
@@ -167,13 +168,6 @@ func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error
 		return nil, err
 	}
 
-	frameCount := len(ugoiraResp.UgoiraMetadata.Frames)
-	totalDelay := 0
-	for _, frame := range ugoiraResp.UgoiraMetadata.Frames {
-		totalDelay += frame.Delay
-	}
-	dur := totalDelay / frameCount
-
 	g := &gif.GIF{}
 	for _, f := range zipReader.File {
 		rc, err := f.Open()
@@ -189,7 +183,7 @@ func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error
 		quantizer := gogif.MedianCutQuantizer{NumColor: 64}
 		quantizer.Quantize(palettedImage, b, img, image.Point{})
 		g.Image = append(g.Image, palettedImage)
-		g.Delay = append(g.Delay, dur)
+		g.Delay = append(g.Delay, 0)
 		rc.Close()
 	}
 
@@ -200,5 +194,4 @@ func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error
 	}
 
 	return gifBuffer, nil
-
 }
