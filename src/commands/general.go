@@ -82,8 +82,19 @@ func InfoHandler(e *handler.CommandEvent) error {
 		SetTimestamp(e.CreatedAt()).
 		Build()
 
+	var actionRow discord.ActionRowComponent
+	actionRow = actionRow.AddComponents(
+		discord.NewLinkButton("Support Server", "https://discord.gg/Fr2BhuCkET"),
+	)
+	actionRow = actionRow.AddComponents(
+		discord.NewLinkButton("GitHub", "https://github.com/jckli/picsiv"),
+	)
+
 	return e.Respond(
 		discord.InteractionResponseTypeCreateMessage,
-		discord.NewMessageCreateBuilder().SetEmbeds(embed).Build(),
+		discord.NewMessageCreateBuilder().
+			SetEmbeds(embed).
+			SetContainerComponents(actionRow).
+			Build(),
 	)
 }
