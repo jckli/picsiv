@@ -42,17 +42,25 @@ func New(version string) *Bot {
 		Logger:  logger,
 		Version: version,
 		Paginator: paginator.New(
+			paginator.WithTimeout(50*time.Minute),
 			paginator.WithEmbedColor(0x0096fa),
 			paginator.WithButtonsConfig(
 				paginator.ButtonsConfig{
-					First: paginator.DefaultConfig().ButtonsConfig.First,
-					Back:  paginator.DefaultConfig().ButtonsConfig.Back,
-					Stop:  nil,
-					Next:  paginator.DefaultConfig().ButtonsConfig.Next,
-					Last:  paginator.DefaultConfig().ButtonsConfig.Last,
+					First: nil,
+					Back: &paginator.ComponentOptions{
+						Emoji: paginator.DefaultConfig().ButtonsConfig.Back.Emoji,
+						Label: paginator.DefaultConfig().ButtonsConfig.Back.Label,
+						Style: discord.ButtonStyleDanger,
+					},
+					Stop: nil,
+					Next: &paginator.ComponentOptions{
+						Emoji: paginator.DefaultConfig().ButtonsConfig.Next.Emoji,
+						Label: paginator.DefaultConfig().ButtonsConfig.Next.Label,
+						Style: discord.ButtonStyleSuccess,
+					},
+					Last: nil,
 				},
 			),
-			paginator.WithCleanupInterval(5*time.Minute),
 		),
 		Config: Config{
 			Token:       os.Getenv("TOKEN"),

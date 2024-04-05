@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/disgoorg/disgo/bot"
-	"github.com/jckli/picsiv/src/commands"
-	"github.com/jckli/picsiv/src/dbot"
-	_ "github.com/joho/godotenv/autoload"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/events"
+	"github.com/jckli/picsiv/src/commands"
+	"github.com/jckli/picsiv/src/dbot"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
@@ -21,7 +23,9 @@ func main() {
 	client := picsiv.Setup(
 		h,
 		bot.NewListenerFunc(picsiv.ReadyEvent),
-		bot.NewListenerFunc(commands.OnMessageCreate),
+		bot.NewListenerFunc(func(e *events.MessageCreate) {
+			commands.OnMessageCreate(e, picsiv)
+		}),
 	)
 
 	picsiv.Client = client

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -8,7 +9,10 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 
+	"github.com/jckli/picsiv/src/dbot"
 	"github.com/jckli/picsiv/src/utils"
+
+	"github.com/disgoorg/paginator"
 )
 
 func isValidURL(toTest string) bool {
@@ -28,7 +32,7 @@ func isValidURL(toTest string) bool {
 	return true
 }
 
-func OnMessageCreate(e *events.MessageCreate) {
+func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 	if e.Message.Author.Bot || e.Message.Author.System {
 		return
 	}
@@ -81,6 +85,22 @@ func OnMessageCreate(e *events.MessageCreate) {
 			return
 		} else {
 			if len(illust.Urls) > 1 {
+				fmt.Println("Creating paginator")
+				_, err := b.Paginator.CreateMessage(e.Client(), e.ChannelID, paginator.Pages{
+					ID: e.MessageID.String(),
+					PageFunc: func(page int, embed *discord.EmbedBuilder) {
+						embed.SetTitle("Full Pixiv Images").
+							SetImage(illust.Urls[page]).
+							SetFooterText(fmt.Sprintf("%d/%d", page+1, len(illust.Urls)))
+					},
+					Pages:      len(illust.Urls),
+					ExpireMode: paginator.ExpireModeAfterLastUsage,
+				}, false)
+				fmt.Println("Paginator created")
+				fmt.Println(err)
+				if err != nil {
+					return
+				}
 				return
 			} else {
 				embed := discord.NewEmbedBuilder().
