@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -63,7 +62,7 @@ func OnMessageCreate(e *events.MessageCreate) {
 			}
 
 			ugoira, err := utils.ParseHibiApiUgoira(ugoiraResp)
-			file := discord.NewFile("ugoira.gif", "ugoira", ugoira)
+			file := discord.NewFile("ugoira.gif", "", ugoira)
 			embed := discord.NewEmbedBuilder().
 				SetTitle("Full Pixiv Ugoira").
 				SetColor(0x0096fa).
