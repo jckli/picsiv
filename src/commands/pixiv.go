@@ -38,7 +38,6 @@ func OnMessageCreate(e *events.MessageCreate) {
 
 	if strings.Contains(messageContent, "pixiv.net") &&
 		strings.Contains(messageContent, "artworks") {
-		fmt.Println("pixiv link detected")
 		urlRaw := regexp.MustCompile(`https?://[^\s]+\d`).FindString(messageContent)
 		if !isValidURL(urlRaw) {
 			return
@@ -56,9 +55,8 @@ func OnMessageCreate(e *events.MessageCreate) {
 		if !ok {
 			return
 		}
-		fmt.Println("illust: ", illust)
+
 		if illust.Ugoira {
-			fmt.Println("ugoira detected")
 			ugoiraResp, err := utils.RequestHibiApiUgoria(id[1])
 			if err != nil || ugoiraResp == nil {
 				return
@@ -83,11 +81,9 @@ func OnMessageCreate(e *events.MessageCreate) {
 			})
 			return
 		} else {
-			fmt.Println("image detected")
 			if len(illust.Urls) > 1 {
 				return
 			} else {
-				fmt.Println("sending image")
 				embed := discord.NewEmbedBuilder().
 					SetTitle("Full Pixiv Image").
 					SetColor(0x0096fa).
