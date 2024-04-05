@@ -38,6 +38,7 @@ func New(version string) *Bot {
 	logger.Info("Starting bot version: " + version)
 
 	return &Bot{
+		Client:  nil,
 		Logger:  logger,
 		Version: version,
 		Paginator: paginator.New(
@@ -68,6 +69,7 @@ func (b *Bot) Setup(listeners ...bot.EventListener) bot.Client {
 		bot.WithGatewayConfigOpts(
 			gateway.WithIntents(
 				gateway.IntentGuilds,
+				gateway.IntentGuildMessages,
 				gateway.IntentMessageContent,
 			),
 		),

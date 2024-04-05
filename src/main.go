@@ -21,7 +21,10 @@ func main() {
 	client := picsiv.Setup(
 		h,
 		bot.NewListenerFunc(picsiv.ReadyEvent),
+		bot.NewListenerFunc(commands.OnMessageCreate),
 	)
+
+	picsiv.Client = client
 
 	var err error
 	if picsiv.Config.DevMode {
