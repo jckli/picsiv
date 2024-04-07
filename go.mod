@@ -5,7 +5,7 @@ go 1.21.5
 require (
 	github.com/andybons/gogif v0.0.0-20140526152223-16d573594812
 	github.com/disgoorg/disgo v0.17.2
-	github.com/disgoorg/paginator v0.0.0-20230104145353-f988d828ede9
+	github.com/disgoorg/paginator v0.0.0-20240407225836-102024af0cb8
 	github.com/disgoorg/snowflake/v2 v2.0.1
 	github.com/joho/godotenv v1.5.1
 	github.com/valyala/fasthttp v1.52.0
