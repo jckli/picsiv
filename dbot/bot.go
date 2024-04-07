@@ -34,6 +34,7 @@ type Bot struct {
 func New(version string) *Bot {
 	devServerID, _ := strconv.Atoi(os.Getenv("DEV_SERVER_ID"))
 
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	logger := slog.Default()
 	logger.Info("Starting bot version: " + version)
 

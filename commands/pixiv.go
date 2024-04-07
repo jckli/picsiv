@@ -9,8 +9,8 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 
-	"github.com/jckli/picsiv/src/dbot"
-	"github.com/jckli/picsiv/src/utils"
+	"github.com/jckli/picsiv/dbot"
+	"github.com/jckli/picsiv/utils"
 
 	"github.com/disgoorg/paginator"
 )

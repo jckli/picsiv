@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
-	"github.com/jckli/picsiv/src/dbot"
+	"github.com/jckli/picsiv/dbot"
 )
 
 var CommandList = []discord.ApplicationCommandCreate{

@@ -10,8 +10,8 @@ import (
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/events"
-	"github.com/jckli/picsiv/src/commands"
-	"github.com/jckli/picsiv/src/dbot"
+	"github.com/jckli/picsiv/commands"
+	"github.com/jckli/picsiv/dbot"
 	_ "github.com/joho/godotenv/autoload"
 )
 
