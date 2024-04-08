@@ -1,3 +1,5 @@
 .env
 cogs/__pycache__
 core/__pycache__
+
+.DS_Store
