@@ -7,6 +7,7 @@ import (
 )
 
 var CommandList = []discord.ApplicationCommandCreate{
+	helpCommand,
 	pingCommand,
 	infoCommand,
 	redditCommand,
@@ -15,6 +16,7 @@ var CommandList = []discord.ApplicationCommandCreate{
 func CommandHandlers(b *dbot.Bot) *handler.Mux {
 	h := handler.New()
 
+	h.Command("/help", HelpHandler)
 	h.Command("/ping", PingHandler)
 	h.Command("/picsiv", InfoHandler)
 	h.Route("/reddit", func(h handler.Router) {

@@ -35,7 +35,7 @@ func PingHandler(e *handler.CommandEvent) error {
 
 var infoCommand = discord.SlashCommandCreate{
 	Name:        "picsiv",
-	Description: "Display basic information about Picsiv",
+	Description: "Displays basic information about Picsiv",
 }
 
 func InfoHandler(e *handler.CommandEvent) error {
@@ -95,5 +95,31 @@ func InfoHandler(e *handler.CommandEvent) error {
 			SetEmbeds(embed).
 			SetContainerComponents(actionRow).
 			Build(),
+	)
+}
+
+var helpCommand = discord.SlashCommandCreate{
+	Name:        "help",
+	Description: "Displays all commands",
+}
+
+func HelpHandler(e *handler.CommandEvent) error {
+	botUser, _ := e.Client().Caches().SelfUser()
+
+	description := fmt.Sprintf(
+		"**ping**: Pong! Shows the current ping of Picsiv.\n**picsiv**: Displays basic information about Picsiv.\n**help**: Displays all commands.\n**reddit**: Gets a random post from an art subreddit.",
+	)
+
+	embed := discord.NewEmbedBuilder().
+		SetTitle("Picsiv Commands").
+		SetAuthor("Picsiv", "", *botUser.AvatarURL()).
+		SetColor(0x0096fa).
+		SetDescription("Picsiv will automatically respond to all `pixiv.net` links with the full image! There is no setup required.").
+		AddField("Commands", description, false).
+		Build()
+
+	return e.Respond(
+		discord.InteractionResponseTypeCreateMessage,
+		discord.NewMessageCreateBuilder().SetEmbeds(embed).Build(),
 	)
 }

@@ -1,17 +1,15 @@
 package commands
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/jckli/picsiv/utils"
+	"strings"
 )
 
 var redditCommand = discord.SlashCommandCreate{
 	Name:        "reddit",
-	Description: "Get a random post from an art subreddit",
+	Description: "Gets a random post from an art subreddit",
 	Options: []discord.ApplicationCommandOption{
 		discord.ApplicationCommandOptionString{
 			Name:         "subreddit",
