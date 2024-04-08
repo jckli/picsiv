@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/disgoorg/disgo/discord"
@@ -126,22 +127,11 @@ func RedditHandler(e *handler.CommandEvent) error {
 
 	resp, err := utils.RequestReddit(subreddit, timeperiod, nsfw)
 	if err != nil {
-		return err
+		return errorHandler(e)
 	}
 
 	if resp.Status != 200 {
-		embed := discord.NewEmbedBuilder().
-			SetTitle("Error").
-			SetDescription("Could not get image from API. Please try again later.").
-			SetColor(0xff524f).
-			Build()
-
-		_, err = e.UpdateInteractionResponse(
-			discord.MessageUpdate{
-				Embeds: &[]discord.Embed{embed},
-			},
-		)
-		return err
+		return errorHandler(e)
 	}
 
 	embed := discord.NewEmbedBuilder().
@@ -168,4 +158,20 @@ func fuzzySearch(arr []string, searchStr string) []string {
 		}
 	}
 	return result
+}
+
+func errorHandler(e *handler.CommandEvent) error {
+	embed := discord.NewEmbedBuilder().
+		SetTitle("Error").
+		SetDescription("Could not get image from API. Please try again later.").
+		SetColor(0xff524f).
+		Build()
+
+	_, err := e.UpdateInteractionResponse(
+		discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		},
+	)
+	return err
+
 }
