@@ -31,7 +31,6 @@ func PingHandler(e *handler.CommandEvent) error {
 		discord.InteractionResponseTypeCreateMessage,
 		discord.NewMessageCreateBuilder().SetEmbeds(embed).Build(),
 	)
-
 }
 
 var infoCommand = discord.SlashCommandCreate{

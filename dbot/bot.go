@@ -42,7 +42,7 @@ func New(version string) *Bot {
 		Logger:  logger,
 		Version: version,
 		Paginator: paginator.New(
-			paginator.WithTimeout(10*time.Minute),
+			paginator.WithTimeout(15*time.Minute),
 			paginator.WithEmbedColor(0x0096fa),
 			paginator.WithButtonsConfig(
 				paginator.ButtonsConfig{

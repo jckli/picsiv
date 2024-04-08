@@ -85,7 +85,6 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			return
 		} else {
 			if len(illust.Urls) > 1 {
-				fmt.Println("Creating paginator")
 				_, err := b.Paginator.CreateMessage(e.Client(), e.ChannelID, paginator.Pages{
 					ID: e.MessageID.String(),
 					PageFunc: func(page int, embed *discord.EmbedBuilder) {
@@ -96,8 +95,6 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 					Pages:      len(illust.Urls),
 					ExpireMode: paginator.ExpireModeAfterLastUsage,
 				}, false)
-				fmt.Println("Paginator created")
-				fmt.Println(err)
 				if err != nil {
 					return
 				}

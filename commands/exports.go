@@ -9,6 +9,7 @@ import (
 var CommandList = []discord.ApplicationCommandCreate{
 	pingCommand,
 	infoCommand,
+	redditCommand,
 }
 
 func CommandHandlers(b *dbot.Bot) *handler.Mux {
@@ -16,6 +17,10 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 
 	h.Command("/ping", PingHandler)
 	h.Command("/picsiv", InfoHandler)
+	h.Route("/reddit", func(h handler.Router) {
+		h.Command("/", RedditHandler)
+		h.Autocomplete("/", RedditAutocompleteHandler)
+	})
 
 	return h
 }
