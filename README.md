@@ -8,7 +8,7 @@ https://jackli.dev/picsiv
 
 ## features
 
-picsiv is a simple and nifty bot that makes browsing anime art much easier. it can do a variety of features, like grabbing cool art from subreddits as well as simply sending a full image of a pixiv link with more features to come.
+picsiv is a simple and nifty bot that makes browsing anime art much easier. it can do a variety of features, like grabbing cool art from subreddits as well as simply sending a full image of a pixiv link with maybe more features to come.
 
 originally the bot was made to simply send the full quality image of a pixiv link posted in chat. because pixiv original embeds only send half of the image, as well as because their image cdn forbids people from sending the raw image link, i made this bot lol. this feature utilizes my pixiv mirror (created using cloudflare workers), https://pximg.jackli.dev/, and [hibiapi](https://github.com/mixmoe/HibiAPI)
 
@@ -20,7 +20,7 @@ theres also features that use reddit's api, and a bunch of my other cloudflare w
 
 <img src="https://cdn.hayasaka.moe/aea5d9y2mkl2.jpg" />
 
-*we dont like this i want to see the full beauty of this anime girl*
+_we dont like this i want to see the full beauty of this anime girl_
 
 ### pixiv bot!!!
 
@@ -34,13 +34,20 @@ theres also features that use reddit's api, and a bunch of my other cloudflare w
 
 ## setup
 
-1. create discord bot from the [Discord Developer Portal](https://discord.com/developers/applications/) website and save the token
-2. clone this repository
-3. go into the folder and create a .env file with the following contents:
-```
-TOKEN=your_token_here
-```
-*your_token_here should be replaced with your own token from step 1*
+ideally just use the one that i host at https://jackli.dev/picsiv, but if you want to host your own, follow these steps:
 
-4. open terminal and run `pip install -r requirements.txt`
-5. run the bot with `python -u bot.py`
+1. create discord bot from the [Discord Developer Portal](https://discord.com/developers/applications/) website and save the token
+2. host a hibiapi instance, or find a public one that you can use
+3. clone this repository
+4. go into the folder and create a .env file with the following contents:
+
+```
+VERSION=your_version_here
+TOKEN=your_token_here
+DEV_SERVER_ID=your_dev_server_id_here
+DEV_MODE=dev_mode_true_or_false_here
+HIBIAPI_URL=your_hibiapi_url_here
+```
+
+4. open terminal and run `go run main.go`
+5. invite the bot to your server and use it
