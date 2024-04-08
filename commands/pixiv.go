@@ -59,6 +59,30 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			return
 		}
 
+		if illust.Nsfw {
+			channel, ok := e.Channel()
+			if !ok {
+				return
+			}
+			if !channel.NSFW() {
+				embed := discord.NewEmbedBuilder().
+					SetTitle("Error").
+					SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
+					SetColor(0xff524f).
+					Build()
+				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
+					Embeds: []discord.Embed{embed},
+					MessageReference: &discord.MessageReference{
+						MessageID: &e.Message.ID,
+					},
+					AllowedMentions: &discord.AllowedMentions{
+						RepliedUser: false,
+					},
+				})
+				return
+			}
+		}
+
 		if illust.Ugoira {
 			ugoiraResp, err := utils.RequestHibiApiUgoria(id[1])
 			if err != nil || ugoiraResp == nil {

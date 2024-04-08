@@ -171,5 +171,4 @@ func errorHandler(e *handler.CommandEvent) error {
 		},
 	)
 	return err
-
 }
