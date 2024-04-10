@@ -1,10 +1,11 @@
 package commands
 
 import (
+	"strings"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/jckli/picsiv/utils"
-	"strings"
 )
 
 var redditCommand = discord.SlashCommandCreate{
@@ -122,6 +123,21 @@ func RedditHandler(e *handler.CommandEvent) error {
 	subreddit := data.String("subreddit")
 	timeperiod := data.String("timeperiod")
 	nsfw := data.Bool("nsfw")
+
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok && nsfw &&
+		!channel.NSFW() {
+		embed := discord.NewEmbedBuilder().
+			SetTitle("Error").
+			SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
+			SetColor(0xff524f).
+			Build()
+		_, err := e.UpdateInteractionResponse(
+			discord.MessageUpdate{
+				Embeds: &[]discord.Embed{embed},
+			},
+		)
+		return err
+	}
 
 	resp, err := utils.RequestReddit(subreddit, timeperiod, nsfw)
 	if err != nil {

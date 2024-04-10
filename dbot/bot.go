@@ -86,6 +86,7 @@ func (b *Bot) Setup(listeners ...bot.EventListener) bot.Client {
 		bot.WithCacheConfigOpts(
 			cache.WithCaches(cache.FlagGuilds),
 			cache.WithCaches(cache.FlagMessages),
+			cache.WithCaches(cache.FlagChannels),
 		),
 	)
 	if err != nil {

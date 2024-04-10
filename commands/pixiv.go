@@ -64,6 +64,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			if !ok {
 				return
 			}
+
 			if !channel.NSFW() {
 				embed := discord.NewEmbedBuilder().
 					SetTitle("Error").
