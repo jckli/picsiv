@@ -8,6 +8,7 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 
 	"github.com/jckli/picsiv/dbot"
 	"github.com/jckli/picsiv/utils"
@@ -30,6 +31,9 @@ func isValidURL(toTest string) bool {
 	}
 
 	return true
+}
+
+func PixivButtonHandler(e *handler.ComponentEvent) {
 }
 
 func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
