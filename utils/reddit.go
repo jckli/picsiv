@@ -7,9 +7,11 @@ import (
 )
 
 type RedditResponse struct {
-	Link   string `json:"imglink"`
-	Nsfw   bool   `json:"over_18"`
-	Status int    `json:"status"`
+	Status int `json:"status"`
+	Data   struct {
+		Illust string `json:"illust"`
+		Nsfw   bool   `json:"nsfw"`
+	} `json:"data"`
 }
 
 func RequestReddit(subreddit, timeperiod string, nsfw bool) (*RedditResponse, error) {

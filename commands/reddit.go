@@ -150,9 +150,9 @@ func RedditHandler(e *handler.CommandEvent) error {
 
 	embed := discord.NewEmbedBuilder().
 		SetTitle("r/" + subreddit).
-		SetURL(resp.Link).
+		SetURL(resp.Data.Illust).
 		SetColor(0x0096fa).
-		SetImage(resp.Link).
+		SetImage(resp.Data.Illust).
 		SetFooterText("Powered by https://reddit.jackli.dev/" + subreddit).
 		Build()
 
