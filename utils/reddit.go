@@ -17,7 +17,7 @@ func RequestReddit(subreddit, timeperiod string, nsfw bool) (*RedditResponse, er
 	if timeperiod != "" {
 		timeperiod = "&timeperiod=" + timeperiod
 	}
-	url := "https://" + subreddit + ".jackli.dev/api?_=" + rs + timeperiod + "&nsfw=" + strconv.FormatBool(
+	url := "https://reddit.jackli.dev/" + subreddit + "/api?_=" + rs + timeperiod + "&nsfw=" + strconv.FormatBool(
 		nsfw,
 	)
 	resp, err := getRequest(url)

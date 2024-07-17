@@ -153,7 +153,7 @@ func RedditHandler(e *handler.CommandEvent) error {
 		SetURL(resp.Link).
 		SetColor(0x0096fa).
 		SetImage(resp.Link).
-		SetFooterText("Powered by https://" + subreddit + ".jackli.dev").
+		SetFooterText("Powered by https://reddit.jackli.dev/" + subreddit).
 		Build()
 
 	_, err = e.UpdateInteractionResponse(
