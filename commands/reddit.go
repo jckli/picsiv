@@ -57,6 +57,8 @@ func subredditAutocompleteHandler(e *handler.AutocompleteEvent) error {
 		"saltsanime",
 		"megane",
 		"imaginarymaids",
+		"cutelittlefangs",
+		"pouts",
 	}
 
 	choices := make([]discord.AutocompleteChoice, 0, 25)
