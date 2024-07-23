@@ -30,6 +30,17 @@ func main() {
 
 	picsiv.Client = client
 
+	cache := picsiv.InitializeCache()
+	picsiv.Cache = cache
+	ticker := time.NewTicker(time.Minute * 30)
+	defer ticker.Stop()
+	go func() {
+		for {
+			<-ticker.C
+			picsiv.Cache = picsiv.InitializeCache()
+		}
+	}()
+
 	var err error
 	if picsiv.Config.DevMode {
 		picsiv.Logger.Info(

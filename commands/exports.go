@@ -24,5 +24,13 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 		h.Autocomplete("/", RedditAutocompleteHandler)
 	})
 
+	h.Route("/pixiv", func(h handler.Router) {
+		// h.Command("/", PixivHandler)
+
+		h.Component("/{id}/page/{page}", func(e *handler.ComponentEvent) error {
+			return PixivButtonHandler(e, b)
+		})
+	})
+
 	return h
 }

@@ -15,6 +15,8 @@ import (
 	"github.com/disgoorg/paginator"
 	"github.com/disgoorg/snowflake/v2"
 	"log/slog"
+
+	lru "github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 type Config struct {
@@ -27,6 +29,7 @@ type Bot struct {
 	Client    bot.Client
 	Logger    *slog.Logger
 	Version   string
+	Cache     *lru.LRU[string, string]
 	Paginator *paginator.Manager
 	Config    Config
 }
@@ -41,6 +44,7 @@ func New(version string) *Bot {
 		Client:  nil,
 		Logger:  logger,
 		Version: version,
+		Cache:   nil,
 		Paginator: paginator.New(
 			paginator.WithTimeout(15*time.Minute),
 			paginator.WithEmbedColor(0x0096fa),
@@ -107,4 +111,11 @@ func (b *Bot) ReadyEvent(_ *events.Ready) {
 	}
 
 	b.Logger.Info("Bot presence set successfully.")
+}
+
+func (b *Bot) InitializeCache() *lru.LRU[string, string] {
+	c := lru.NewLRU[string, string](300, nil, time.Minute*30)
+	b.Logger.Info("Cache initialized.")
+
+	return c
 }

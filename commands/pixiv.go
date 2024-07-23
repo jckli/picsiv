@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/disgoorg/disgo/discord"
@@ -12,8 +13,6 @@ import (
 
 	"github.com/jckli/picsiv/dbot"
 	"github.com/jckli/picsiv/utils"
-
-	"github.com/disgoorg/paginator"
 )
 
 func isValidURL(toTest string) bool {
@@ -33,7 +32,71 @@ func isValidURL(toTest string) bool {
 	return true
 }
 
-func PixivButtonHandler(e *handler.ComponentEvent) {
+func pixivComponents(id, prevPage, nextPage string) []discord.ContainerComponent {
+	return []discord.ContainerComponent{
+		discord.ActionRowComponent{
+			discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
+				WithEmoji(discord.ComponentEmoji{Name: "◀"}).
+				WithDisabled(prevPage == "-1"),
+			discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
+				WithEmoji(discord.ComponentEmoji{Name: "▶"}).
+				WithDisabled(nextPage == "-1"),
+		},
+	}
+}
+
+func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
+	id := e.Variables["id"]
+	page := e.Variables["page"]
+
+	resp, found := b.Cache.Get(id)
+	var urls []string
+	if found {
+		urls = strings.Split(resp, ",")
+	} else {
+		illustResp, err := utils.RequestHibiApiIllust(id)
+		if err != nil {
+			return err
+		}
+		illust, ok := utils.ParseHibiApiIllust(illustResp)
+		if !ok {
+			return fmt.Errorf("Failed to parse illust.")
+		}
+
+		urlString := strings.Join(illust.Urls, ",")
+		b.Cache.Add(id, urlString)
+
+		urls = illust.Urls
+	}
+
+	pageInt, _ := strconv.Atoi(page)
+
+	embed := discord.NewEmbedBuilder().
+		SetTitle("Full Pixiv Images").
+		SetColor(0x0096fa).
+		SetImage(urls[pageInt-1]).
+		SetFooterText(fmt.Sprintf("%d/%d", pageInt, len(urls))).
+		Build()
+
+	maxPage := len(urls)
+	prevPage := strconv.Itoa(pageInt - 1)
+	nextPage := strconv.Itoa(pageInt + 1)
+
+	if pageInt == 1 {
+		prevPage = "-1"
+	}
+	if pageInt == maxPage {
+		nextPage = "-1"
+	}
+
+	components := pixivComponents(id, prevPage, nextPage)
+
+	e.UpdateMessage(discord.MessageUpdate{
+		Embeds:     &[]discord.Embed{embed},
+		Components: &components,
+	})
+
+	return nil
 }
 
 func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
@@ -114,19 +177,17 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			return
 		} else {
 			if len(illust.Urls) > 1 {
-				_, err := b.Paginator.CreateMessage(e.Client(), e.ChannelID, paginator.Pages{
-					ID: e.MessageID.String(),
-					PageFunc: func(page int, embed *discord.EmbedBuilder) {
-						embed.SetTitle("Full Pixiv Images").
-							SetImage(illust.Urls[page]).
-							SetFooterText(fmt.Sprintf("%d/%d", page+1, len(illust.Urls)))
-					},
-					Pages:      len(illust.Urls),
-					ExpireMode: paginator.ExpireModeAfterLastUsage,
-				}, false)
-				if err != nil {
-					return
-				}
+				embed := discord.NewEmbedBuilder().
+					SetTitle("Full Pixiv Images").
+					SetImage(illust.Urls[0]).
+					SetColor(0x0096fa).
+					SetFooterText(fmt.Sprintf("%d/%d", 1, len(illust.Urls)))
+				components := pixivComponents(id[1], "-1", "2")
+
+				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
+					Embeds:     []discord.Embed{embed.Build()},
+					Components: components,
+				})
 				return
 			} else {
 				embed := discord.NewEmbedBuilder().
