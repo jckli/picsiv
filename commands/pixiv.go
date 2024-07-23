@@ -32,12 +32,16 @@ func isValidURL(toTest string) bool {
 	return true
 }
 
-func pixivComponents(id, prevPage, nextPage string) []discord.ContainerComponent {
+func pixivComponents(
+	id, prevPage, nextPage, curPage, maxPage string,
+) []discord.ContainerComponent {
 	return []discord.ContainerComponent{
 		discord.ActionRowComponent{
 			discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
 				WithEmoji(discord.ComponentEmoji{Name: "◀"}).
 				WithDisabled(prevPage == "-1"),
+			discord.NewSecondaryButton(fmt.Sprintf("%s/%s", curPage, maxPage), "page-counter").
+				WithDisabled(true),
 			discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
 				WithEmoji(discord.ComponentEmoji{Name: "▶"}).
 				WithDisabled(nextPage == "-1"),
@@ -75,12 +79,12 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		SetTitle("Full Pixiv Images").
 		SetColor(0x0096fa).
 		SetImage(urls[pageInt-1]).
-		SetFooterText(fmt.Sprintf("%d/%d", pageInt, len(urls))).
 		Build()
 
 	maxPage := len(urls)
 	prevPage := strconv.Itoa(pageInt - 1)
 	nextPage := strconv.Itoa(pageInt + 1)
+	maxPageStr := strconv.Itoa(maxPage)
 
 	if pageInt == 1 {
 		prevPage = "-1"
@@ -89,7 +93,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		nextPage = "-1"
 	}
 
-	components := pixivComponents(id, prevPage, nextPage)
+	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr)
 
 	e.UpdateMessage(discord.MessageUpdate{
 		Embeds:     &[]discord.Embed{embed},
@@ -181,11 +185,11 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 					SetTitle("Full Pixiv Images").
 					SetImage(illust.Urls[0]).
 					SetColor(0x0096fa).
-					SetFooterText(fmt.Sprintf("%d/%d", 1, len(illust.Urls)))
-				components := pixivComponents(id[1], "-1", "2")
+					Build()
+				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
 
 				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-					Embeds:     []discord.Embed{embed.Build()},
+					Embeds:     []discord.Embed{embed},
 					Components: components,
 				})
 				return
