@@ -8,16 +8,10 @@ github.com/disgoorg/disgo v0.17.2 h1:RxiLq8guMtk+9tArFwve02iya2APQ9yZVtV30ySKNtw
 github.com/disgoorg/disgo v0.17.2/go.mod h1:8r3h9fXSz7BbACxLPsPbtB6LX8gaQFUETgPKV/0gAKQ=
 github.com/disgoorg/json v1.1.0 h1:7xigHvomlVA9PQw9bMGO02PHGJJPqvX5AnwlYg/Tnys=
 github.com/disgoorg/json v1.1.0/go.mod h1:BHDwdde0rpQFDVsRLKhma6Y7fTbQKub/zdGO5O9NqqA=
-github.com/disgoorg/paginator v0.0.0-20230104145353-f988d828ede9 h1:h7feN1V8sRJGKtd/5g8FtKT0IcVyCKABRSECOEf3oYc=
-github.com/disgoorg/paginator v0.0.0-20230104145353-f988d828ede9/go.mod h1:k+g1jz3HxI97c5IGsScxOZYqhjZvDkNKLma7pUXiGcw=
-github.com/disgoorg/paginator v0.0.0-20240407225836-102024af0cb8 h1:Yv0wybsDYRbqaA8cHKC+72Atqv1zOb9lgcWa0lgTerk=
-github.com/disgoorg/paginator v0.0.0-20240407225836-102024af0cb8/go.mod h1:k+g1jz3HxI97c5IGsScxOZYqhjZvDkNKLma7pUXiGcw=
 github.com/disgoorg/snowflake/v2 v2.0.1 h1:CuUxGLwggUxEswZOmZ+mZ5i0xSumQdXW9tXW7uGqe+0=
 github.com/disgoorg/snowflake/v2 v2.0.1/go.mod h1:SPU9c2CNn5DSyb86QcKtdZgix9osEtKrHLW4rMhfLCs=
 github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JZquRuzLw3g4wouNVzKL15iLr/zn/QY=
 github.com/gorilla/websocket v1.5.1/go.mod h1:x3kM2JMyaluk02fnUJpQuwD2dCS5NDG2ZHL0uE0tcaY=
-github.com/hashicorp/golang-lru v1.0.2 h1:dV3g9Z/unq5DpblPpw+Oqcv4dU/1omnb4Ok8iPY6p1c=
-github.com/hashicorp/golang-lru v1.0.2/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=
 github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
