@@ -4,12 +4,14 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
-	"github.com/andybons/gogif"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/andybons/gogif"
 
 	"github.com/valyala/fasthttp"
 )
@@ -86,6 +88,49 @@ type HibiApiUgoiraResponse struct {
 			Delay int    `json:"delay"`
 		} `json:"frames"`
 	} `json:"ugoira_metadata"`
+}
+
+type PximgApiResponse struct {
+	Status int `json:"status"`
+	Data   struct {
+		Illust string `json:"illust"`
+		Nsfw   bool   `json:"nsfw"`
+	} `json:"data"`
+}
+
+func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
+	rs := generateRandomString(10)
+	if mode != "" {
+		mode = "&mode=" + mode
+	}
+	if date != "" {
+		date = "&date=" + date
+	}
+
+	url := "https://pximg.jackli.dev/api" + "?_=" + rs + mode + date + "&nsfw=" + strconv.FormatBool(
+		nsfw,
+	)
+	resp, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody := PximgApiResponse{}
+	if err := json.Unmarshal(resp, &respBody); err != nil {
+		return nil, err
+	}
+
+	return &respBody, nil
+}
+
+func ParsePximgApi(resp *PximgApiResponse) (*PximgApiResponse, bool) {
+	rawImageUrl := resp.Data.Illust
+	path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
+	mirrorUrl := "https://pximg.jackli.dev/" + path
+
+	resp.Data.Illust = mirrorUrl
+	return resp, true
+
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {

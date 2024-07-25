@@ -11,6 +11,7 @@ var CommandList = []discord.ApplicationCommandCreate{
 	pingCommand,
 	infoCommand,
 	redditCommand,
+	pixivCommand,
 }
 
 func CommandHandlers(b *dbot.Bot) *handler.Mux {
@@ -25,7 +26,8 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 	})
 
 	h.Route("/pixiv", func(h handler.Router) {
-		// h.Command("/", PixivHandler)
+		h.Command("/", PixivRandomHandler)
+		h.Autocomplete("/", PixivAutocompleteHandler)
 
 		h.Component("/{id}/page/{page}", func(e *handler.ComponentEvent) error {
 			return PixivButtonHandler(e, b)

@@ -42,7 +42,6 @@ func RedditAutocompleteHandler(e *handler.AutocompleteEvent) error {
 		return timeperiodAutocompleteHandler(e)
 	}
 	return e.AutocompleteResult(nil)
-
 }
 
 func subredditAutocompleteHandler(e *handler.AutocompleteEvent) error {
