@@ -189,8 +189,14 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
 
 				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-					Embeds:     []discord.Embed{embed},
+					Embeds: []discord.Embed{embed},
+					MessageReference: &discord.MessageReference{
+						MessageID: &e.Message.ID,
+					},
 					Components: components,
+					AllowedMentions: &discord.AllowedMentions{
+						RepliedUser: false,
+					},
 				})
 				return
 			} else {
