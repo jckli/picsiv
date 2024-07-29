@@ -146,16 +146,13 @@ func PixivRandomHandler(e *handler.CommandEvent) error {
 		return errorHandler(e)
 	}
 
-	parsedResp, ok := utils.ParsePximgApi(resp)
-	if !ok {
-		return errorHandler(e)
-	}
+	mirrorImg := utils.ConvertPixivImage(resp.Data.Illust)
 
 	embed := discord.NewEmbedBuilder().
 		SetTitle("Random Pixiv Post").
-		SetURL(parsedResp.Data.Illust).
+		SetURL(mirrorImg).
 		SetColor(0x0096fa).
-		SetImage(parsedResp.Data.Illust).
+		SetImage(mirrorImg).
 		SetFooterText("Powered by https://pximg.jackli.dev").
 		Build()
 

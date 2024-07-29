@@ -98,6 +98,19 @@ type PximgApiResponse struct {
 	} `json:"data"`
 }
 
+type PixivCache struct {
+	Title   string `json:"title"`
+	Caption string `json:"caption"`
+	Author  struct {
+		Name     string `json:"name"`
+		Account  string `json:"account"`
+		ImageUrl string `json:"image_url"`
+	} `json:"author"`
+	TotalView      int `json:"total_view"`
+	TotalBookmarks int `json:"total_bookmarks"`
+	Urls           []string
+}
+
 func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 	rs := generateRandomString(10)
 	if mode != "" {
@@ -123,14 +136,11 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 	return &respBody, nil
 }
 
-func ParsePximgApi(resp *PximgApiResponse) (*PximgApiResponse, bool) {
-	rawImageUrl := resp.Data.Illust
-	path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
+func ConvertPixivImage(original string) string {
+	path := strings.Split(original, "https://i.pximg.net/")[1]
 	mirrorUrl := "https://pximg.jackli.dev/" + path
 
-	resp.Data.Illust = mirrorUrl
-	return resp, true
-
+	return mirrorUrl
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
