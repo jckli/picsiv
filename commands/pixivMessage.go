@@ -145,9 +145,10 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 	if strings.Contains(messageContent, "pixiv.net") &&
 		strings.Contains(messageContent, "artworks") {
 		urlRaw := regexp.MustCompile(`https?://[^\s]+\d`).FindString(messageContent)
-		if !isValidURL(urlRaw) {
+		if !isValidURL(urlRaw) || strings.Contains(messageContent, "<"+urlRaw+">") {
 			return
 		}
+
 		id := regexp.MustCompile(`artworks/(\d+)`).FindStringSubmatch(urlRaw)
 		if len(id) < 2 {
 			return
