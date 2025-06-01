@@ -168,8 +168,16 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			if !ok {
 				return
 			}
+			nsfw := channel.NSFW()
+			if channel.Type() == 11 {
+				gChannel, ok := e.Client().Caches().GuildMessageChannel(*channel.ParentID())
+				if !ok {
+					return
+				}
+				nsfw = gChannel.NSFW()
 
-			if !channel.NSFW() {
+			}
+			if !nsfw {
 				embed := discord.NewEmbedBuilder().
 					SetTitle("Error").
 					SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
