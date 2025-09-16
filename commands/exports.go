@@ -12,6 +12,7 @@ var CommandList = []discord.ApplicationCommandCreate{
 	infoCommand,
 	redditCommand,
 	pixivCommand,
+	sugoiArtCommand,
 }
 
 func CommandHandlers(b *dbot.Bot) *handler.Mux {
@@ -20,10 +21,6 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 	h.Command("/help", HelpHandler)
 	h.Command("/ping", PingHandler)
 	h.Command("/picsiv", InfoHandler)
-	h.Route("/reddit", func(h handler.Router) {
-		h.Command("/", RedditHandler)
-		h.Autocomplete("/", RedditAutocompleteHandler)
-	})
 
 	h.Route("/pixiv", func(h handler.Router) {
 		h.Command("/", PixivRandomHandler)
@@ -32,6 +29,16 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 		h.Component("/{id}/page/{page}", func(e *handler.ComponentEvent) error {
 			return PixivButtonHandler(e, b)
 		})
+	})
+
+	h.Route("/reddit", func(h handler.Router) {
+		h.Command("/", RedditHandler)
+		h.Autocomplete("/", RedditAutocompleteHandler)
+	})
+
+	h.Route("/sugoiart", func(h handler.Router) {
+		h.Command("/", SugoiArtHandler)
+		h.Autocomplete("/", SugoiArtAutocompleteHandler)
 	})
 
 	return h
