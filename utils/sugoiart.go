@@ -12,7 +12,7 @@ type SugoiArtResponse struct {
 }
 
 func RequestSugoiArt(orientation string) (*SugoiArtResponse, error) {
-	url := "https://sugoiapi.hayasaka.moe/v1/art/random"
+	url := "https://api.art.hayasaka.moe/v1/art/random"
 	if orientation != "" {
 		url += "?o=" + orientation
 	}
