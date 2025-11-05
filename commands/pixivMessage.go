@@ -78,7 +78,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 
 		cache := utils.PixivCache{
 			Title:   illustResp.Title,
-			Caption: illustResp.Caption,
+			Caption: illust.Caption,
 			Author: struct {
 				Name     string `json:"name"`
 				Account  string `json:"account"`
@@ -226,7 +226,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
 				SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 				SetTitle(illustResp.Title).
-				SetDescription(illustResp.Caption).
+				SetDescription(illust.Caption).
 				SetColor(0x0096fa).
 				SetImage("attachment://ugoira.gif").
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
@@ -249,7 +249,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
 					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 					SetTitle(illustResp.Title).
-					SetDescription(illustResp.Caption).
+					SetDescription(illust.Caption).
 					SetImage(illust.Urls[0]).
 					SetColor(0x0096fa).
 					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
@@ -273,7 +273,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
 					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 					SetTitle(illustResp.Title).
-					SetDescription(illustResp.Caption).
+					SetDescription(illust.Caption).
 					SetColor(0x0096fa).
 					SetImage(illust.Urls[0]).
 					AddField("👀", strconv.Itoa(illustResp.TotalView), true).

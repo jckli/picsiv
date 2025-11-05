@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/html"
 	"image"
 	"image/draw"
 	"image/gif"
@@ -13,8 +14,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/JohannesKaufmann/dom"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/converter"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/base"
+	"github.com/JohannesKaufmann/html-to-markdown/v2/plugin/commonmark"
 	"github.com/andybons/gogif"
-
 	"github.com/valyala/fasthttp"
 )
 
@@ -73,9 +77,10 @@ type HibiApiIllustResponse struct {
 }
 
 type ParsedHibiApiIllust struct {
-	Nsfw   bool
-	Urls   []string
-	Ugoira bool
+	Nsfw    bool
+	Urls    []string
+	Ugoira  bool
+	Caption string
 }
 
 type HibiApiUgoiraResponse struct {
@@ -194,10 +199,23 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 		}
 	}
 
+	conv := converter.NewConverter(
+		converter.WithPlugins(
+			base.NewBasePlugin(),
+			commonmark.NewCommonmarkPlugin(),
+		),
+	)
+	conv.Register.RendererFor("a", converter.TagTypeInline, renderChildrenOnly, converter.PriorityEarly)
+	cleanedCaption, err := conv.ConvertString(illustResp.Caption)
+	if err != nil {
+		cleanedCaption = illustResp.Caption
+	}
+
 	return &ParsedHibiApiIllust{
-		Nsfw:   nsfw,
-		Urls:   urls,
-		Ugoira: ugoira,
+		Nsfw:    nsfw,
+		Urls:    urls,
+		Ugoira:  ugoira,
+		Caption: cleanedCaption,
 	}, true
 }
 
@@ -271,4 +289,10 @@ func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error
 	}
 
 	return gifBuffer, nil
+}
+
+func renderChildrenOnly(ctx converter.Context, w converter.Writer, node *html.Node) converter.RenderStatus {
+	href := dom.GetAttributeOr(node, "href", "")
+	w.WriteString(href)
+	return converter.RenderSuccess
 }
