@@ -147,7 +147,7 @@ func ConvertPixivImage(original string) string {
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
-	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/details/" + id
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
