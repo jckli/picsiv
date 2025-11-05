@@ -20,5 +20,8 @@ func getRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 
+	if resp.StatusCode() != fasthttp.StatusOK {
+	}
+
 	return resp.Body(), nil
 }

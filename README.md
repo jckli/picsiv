@@ -46,7 +46,8 @@ VERSION=your_version_here
 TOKEN=your_token_here
 DEV_SERVER_ID=your_dev_server_id_here
 DEV_MODE=dev_mode_true_or_false_here
-HIBIAPI_URL=your_hibiapi_url_here
+PIXIV_API_URL=your_api_url_here
+DEV_ERROR_CHANNEL_ID=your_dev_channel_id_here
 ```
 
 4. open terminal and run `go run main.go`

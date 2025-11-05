@@ -17,61 +17,59 @@ import (
 )
 
 type HibiApiIllustResponse struct {
-	Error  interface{} `json:"error"`
-	Illust struct {
-		ID        int64  `json:"id"`
-		Title     string `json:"title"`
-		Type      string `json:"type"`
+	ID        int64  `json:"id"`
+	Title     string `json:"title"`
+	Type      string `json:"type"`
+	ImageUrls struct {
+		SquareMedium string `json:"square_medium"`
+		Medium       string `json:"medium"`
+		Large        string `json:"large"`
+	} `json:"image_urls"`
+	Caption  string `json:"caption"`
+	Restrict int    `json:"restrict"`
+	User     struct {
+		ID               int64  `json:"id"`
+		Name             string `json:"name"`
+		Account          string `json:"account"`
+		ProfileImageUrls struct {
+			Medium string `json:"medium"`
+		} `json:"profile_image_urls"`
+		IsFollowed bool `json:"is_followed"`
+	} `json:"user"`
+	Tags []struct {
+		Name           string `json:"name"`
+		TranslatedName string `json:"translated_name"`
+	} `json:"tags"`
+	Tools          []string `json:"tools"`
+	CreateDate     string   `json:"create_date"`
+	PageCount      int      `json:"page_count"`
+	Width          int      `json:"width"`
+	Height         int      `json:"height"`
+	SanityLevel    int      `json:"sanity_level"`
+	XRestrict      int      `json:"x_restrict"`
+	Series         any      `json:"series"`
+	MetaSinglePage struct {
+		OriginalImageUrl string `json:"original_image_url"`
+	} `json:"meta_single_page"`
+	MetaPages []struct {
 		ImageUrls struct {
 			SquareMedium string `json:"square_medium"`
 			Medium       string `json:"medium"`
 			Large        string `json:"large"`
+			Original     string `json:"original"`
 		} `json:"image_urls"`
-		Caption  string `json:"caption"`
-		Restrict int    `json:"restrict"`
-		User     struct {
-			ID               int64  `json:"id"`
-			Name             string `json:"name"`
-			Account          string `json:"account"`
-			ProfileImageUrls struct {
-				Medium string `json:"medium"`
-			} `json:"profile_image_urls"`
-			IsFollowed bool `json:"is_followed"`
-		} `json:"user"`
-		Tags []struct {
-			Name           string `json:"name"`
-			TranslatedName string `json:"translated_name"`
-		} `json:"tags"`
-		Tools          []string    `json:"tools"`
-		CreateDate     string      `json:"create_date"`
-		PageCount      int         `json:"page_count"`
-		Width          int         `json:"width"`
-		Height         int         `json:"height"`
-		SanityLevel    int         `json:"sanity_level"`
-		XRestrict      int         `json:"x_restrict"`
-		Series         interface{} `json:"series"`
-		MetaSinglePage struct {
-			OriginalImageUrl string `json:"original_image_url"`
-		} `json:"meta_single_page"`
-		MetaPages []struct {
-			ImageUrls struct {
-				SquareMedium string `json:"square_medium"`
-				Medium       string `json:"medium"`
-				Large        string `json:"large"`
-				Original     string `json:"original"`
-			} `json:"image_urls"`
-		} `json:"meta_pages"`
-		TotalView            int  `json:"total_view"`
-		TotalBookmarks       int  `json:"total_bookmarks"`
-		IsBookmarked         bool `json:"is_bookmarked"`
-		Visible              bool `json:"visible"`
-		IsMuted              bool `json:"is_muted"`
-		TotalComments        int  `json:"total_comments"`
-		IllustAIType         int  `json:"illust_ai_type"`
-		IllustBookStyle      int  `json:"illust_book_style"`
-		CommentAccessControl int  `json:"comment_access_control"`
-	} `json:"illust"`
+	} `json:"meta_pages"`
+	TotalView            int  `json:"total_view"`
+	TotalBookmarks       int  `json:"total_bookmarks"`
+	IsBookmarked         bool `json:"is_bookmarked"`
+	Visible              bool `json:"visible"`
+	IsMuted              bool `json:"is_muted"`
+	TotalComments        int  `json:"total_comments"`
+	IllustAIType         int  `json:"illust_ai_type"`
+	IllustBookStyle      int  `json:"illust_book_style"`
+	CommentAccessControl int  `json:"comment_access_control"`
 }
+
 type ParsedHibiApiIllust struct {
 	Nsfw   bool
 	Urls   []string
@@ -79,15 +77,13 @@ type ParsedHibiApiIllust struct {
 }
 
 type HibiApiUgoiraResponse struct {
-	UgoiraMetadata struct {
-		ZipUrls struct {
-			Medium string `json:"medium"`
-		} `json:"zip_urls"`
-		Frames []struct {
-			File  string `json:"file"`
-			Delay int    `json:"delay"`
-		} `json:"frames"`
-	} `json:"ugoira_metadata"`
+	ZipUrls struct {
+		Medium string `json:"medium"`
+	} `json:"zip_urls"`
+	Frames []struct {
+		File  string `json:"file"`
+		Delay int    `json:"delay"`
+	} `json:"frames"`
 }
 
 type PximgApiResponse struct {
@@ -144,7 +140,7 @@ func ConvertPixivImage(original string) string {
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
-	url := os.Getenv("HIBIAPI_URL") + "/api/pixiv/illust?id=" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/" + id
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
@@ -159,7 +155,7 @@ func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
 }
 
 func RequestHibiApiUgoria(id string) (*HibiApiUgoiraResponse, error) {
-	url := os.Getenv("HIBIAPI_URL") + "/api/pixiv/ugoira_metadata?id=" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/ugoira_metadata/" + id
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
@@ -177,17 +173,17 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 	if illustResp == nil {
 		return nil, false
 	}
-	ugoira := illustResp.Illust.Type == "ugoira"
-	nsfw := illustResp.Illust.SanityLevel >= 5
+	ugoira := illustResp.Type == "ugoira"
+	nsfw := illustResp.SanityLevel >= 5
 	urls := []string{}
-	if illustResp.Illust.MetaSinglePage.OriginalImageUrl != "" {
-		rawImageUrl := illustResp.Illust.MetaSinglePage.OriginalImageUrl
+	if illustResp.MetaSinglePage.OriginalImageUrl != "" {
+		rawImageUrl := illustResp.MetaSinglePage.OriginalImageUrl
 		path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
 		mirrorUrl := "https://pximg.jackli.dev/" + path
 
 		urls = append(urls, mirrorUrl)
 	} else {
-		for _, page := range illustResp.Illust.MetaPages {
+		for _, page := range illustResp.MetaPages {
 			rawImageUrl := page.ImageUrls.Original
 			path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
 			mirrorUrl := "https://pximg.jackli.dev/" + path
@@ -204,7 +200,7 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 }
 
 func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error) {
-	rawZipUrl := ugoiraResp.UgoiraMetadata.ZipUrls.Medium
+	rawZipUrl := ugoiraResp.ZipUrls.Medium
 	path := strings.Split(rawZipUrl, "https://i.pximg.net/")[1]
 	mirrorUrl := "https://pximg.jackli.dev/" + path
 

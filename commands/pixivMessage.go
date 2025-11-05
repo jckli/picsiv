@@ -11,6 +11,7 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/snowflake/v2"
 
 	"github.com/jckli/picsiv/dbot"
 	"github.com/jckli/picsiv/utils"
@@ -64,28 +65,32 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 	} else {
 		illustResp, err := utils.RequestHibiApiIllust(id)
 		if err != nil {
+			b.Logger.Error("Failed to request Hibi API (illust): " + err.Error())
+			sendErrorReply(b, fmt.Sprintf("Could not contact the API for Pixiv ID: %s\nRequester: %s", id, e.Message.Author.ID.String()))
 			return err
 		}
 		illust, ok := utils.ParseHibiApiIllust(illustResp)
 		if !ok {
+			b.Logger.Error("Failed to parse Hibi API response for ID: " + id)
+			sendErrorReply(b, fmt.Sprintf("Could not parse Hibi API for Pixiv ID: %s\nRequester: %s", id, e.Message.Author.ID.String()))
 			return fmt.Errorf("Failed to parse illust.")
 		}
 
 		cache := utils.PixivCache{
-			Title:   illustResp.Illust.Title,
-			Caption: illustResp.Illust.Caption,
+			Title:   illustResp.Title,
+			Caption: illustResp.Caption,
 			Author: struct {
 				Name     string `json:"name"`
 				Account  string `json:"account"`
 				ImageUrl string `json:"image_url"`
 			}{
-				Name:     illustResp.Illust.User.Name,
-				Account:  illustResp.Illust.User.Account,
-				ImageUrl: illustResp.Illust.User.ProfileImageUrls.Medium,
+				Name:     illustResp.User.Name,
+				Account:  illustResp.User.Account,
+				ImageUrl: illustResp.User.ProfileImageUrls.Medium,
 			},
 			Urls:           illust.Urls,
-			TotalView:      illustResp.Illust.TotalView,
-			TotalBookmarks: illustResp.Illust.TotalBookmarks,
+			TotalView:      illustResp.TotalView,
+			TotalBookmarks: illustResp.TotalBookmarks,
 		}
 
 		jsonByte, err := json.Marshal(cache)
@@ -155,11 +160,16 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 		}
 
 		illustResp, err := utils.RequestHibiApiIllust(id[1])
-		if err != nil || illustResp.Error != nil {
+		if err != nil {
+			b.Logger.Error("Failed to request Hibi API (illust): " + err.Error())
+			sendErrorReply(b, fmt.Sprintf("Could not contact the API for Pixiv ID: %s\nRequester: %s", id[1], e.Message.Author.ID.String()))
 			return
 		}
+
 		illust, ok := utils.ParseHibiApiIllust(illustResp)
 		if !ok {
+			b.Logger.Error("Failed to parse Hibi API response for ID: " + id[1])
+			sendErrorReply(b, fmt.Sprintf("Could not parse Hibi API for Pixiv ID: %s\nRequester: %s", id[1], e.Message.Author.ID.String()))
 			return
 		}
 
@@ -198,21 +208,29 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 
 		if illust.Ugoira {
 			ugoiraResp, err := utils.RequestHibiApiUgoria(id[1])
-			if err != nil || ugoiraResp == nil {
+			if err != nil {
+				b.Logger.Error("Failed to request Hibi API (ugoira): " + err.Error())
+				sendErrorReply(b, fmt.Sprintf("Could not contact the Ugoira API for Pixiv ID: %s\nRequester: %s", id[1], e.Message.Author.ID.String()))
 				return
 			}
 
 			ugoira, err := utils.ParseHibiApiUgoira(ugoiraResp)
+			if err != nil {
+				b.Logger.Error("Failed to parse Hibi API ugoira response: " + err.Error())
+				sendErrorReply(b, fmt.Sprintf("Could not parse Ugoira data from the API for Pixiv ID: %s\nRequester: %s", id[1], e.Message.Author.ID.String()))
+				return
+			}
+
 			file := discord.NewFile("ugoira.gif", "", ugoira)
 			embed := discord.NewEmbedBuilder().
-				SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.Illust.User.Name, illustResp.Illust.User.Account)).
-				SetAuthorIcon(utils.ConvertPixivImage(illustResp.Illust.User.ProfileImageUrls.Medium)).
-				SetTitle(illustResp.Illust.Title).
-				SetDescription(illustResp.Illust.Caption).
+				SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+				SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+				SetTitle(illustResp.Title).
+				SetDescription(illustResp.Caption).
 				SetColor(0x0096fa).
 				SetImage("attachment://ugoira.gif").
-				AddField("👀", strconv.Itoa(illustResp.Illust.TotalView), true).
-				AddField("🔖", strconv.Itoa(illustResp.Illust.TotalBookmarks), true).
+				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
+				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
 				Build()
 			e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
 				Embeds: []discord.Embed{embed},
@@ -228,14 +246,14 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 		} else {
 			if len(illust.Urls) > 1 {
 				embed := discord.NewEmbedBuilder().
-					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.Illust.User.Name, illustResp.Illust.User.Account)).
-					SetAuthorIcon(utils.ConvertPixivImage(illustResp.Illust.User.ProfileImageUrls.Medium)).
-					SetTitle(illustResp.Illust.Title).
-					SetDescription(illustResp.Illust.Caption).
+					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+					SetTitle(illustResp.Title).
+					SetDescription(illustResp.Caption).
 					SetImage(illust.Urls[0]).
 					SetColor(0x0096fa).
-					AddField("👀", strconv.Itoa(illustResp.Illust.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.Illust.TotalBookmarks), true).
+					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
+					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
 					Build()
 				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
 
@@ -252,14 +270,14 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				return
 			} else {
 				embed := discord.NewEmbedBuilder().
-					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.Illust.User.Name, illustResp.Illust.User.Account)).
-					SetAuthorIcon(utils.ConvertPixivImage(illustResp.Illust.User.ProfileImageUrls.Medium)).
-					SetTitle(illustResp.Illust.Title).
-					SetDescription(illustResp.Illust.Caption).
+					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+					SetTitle(illustResp.Title).
+					SetDescription(illustResp.Caption).
 					SetColor(0x0096fa).
 					SetImage(illust.Urls[0]).
-					AddField("👀", strconv.Itoa(illustResp.Illust.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.Illust.TotalBookmarks), true).
+					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
+					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
 					Build()
 				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
 					Embeds: []discord.Embed{embed},
@@ -274,4 +292,17 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			}
 		}
 	}
+}
+
+func sendErrorReply(b *dbot.Bot, message string) {
+	id := snowflake.GetEnv("DEV_ERROR_CHANNEL_ID")
+	embed := discord.NewEmbedBuilder().
+		SetTitle("Error").
+		SetDescription(message).
+		SetColor(0xff524f).
+		Build()
+
+	b.Client.Rest().CreateMessage(id, discord.MessageCreate{
+		Embeds: []discord.Embed{embed},
+	})
 }
