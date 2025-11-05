@@ -4,7 +4,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"image"
+	"image/draw"
 	"image/gif"
 	"image/jpeg"
 	"os"
@@ -219,22 +221,46 @@ func ParseHibiApiUgoira(ugoiraResp *HibiApiUgoiraResponse) (*bytes.Buffer, error
 		return nil, err
 	}
 
+	if len(zipReader.File) == 0 {
+		return nil, fmt.Errorf("zip file contains no frames")
+	}
+
+	f0, err := zipReader.File[0].Open()
+	if err != nil {
+		return nil, err
+	}
+	img0, err := jpeg.Decode(f0)
+	if err != nil {
+		f0.Close()
+		return nil, err
+	}
+	f0.Close()
+
+	b0 := img0.Bounds()
+	quantizer := gogif.MedianCutQuantizer{NumColor: 256}
+	globalPaletted := image.NewPaletted(b0, nil)
+	quantizer.Quantize(globalPaletted, b0, img0, image.Point{})
+
+	globalPalette := globalPaletted.Palette
+
 	g := &gif.GIF{}
-	for _, f := range zipReader.File {
+	for i, f := range zipReader.File {
 		rc, err := f.Open()
 		if err != nil {
 			return nil, err
 		}
+
 		img, err := jpeg.Decode(rc)
 		if err != nil {
+			rc.Close()
 			return nil, err
 		}
+
 		b := img.Bounds()
-		palettedImage := image.NewPaletted(b, nil)
-		quantizer := gogif.MedianCutQuantizer{NumColor: 64}
-		quantizer.Quantize(palettedImage, b, img, image.Point{})
+		palettedImage := image.NewPaletted(b, globalPalette)
+		draw.FloydSteinberg.Draw(palettedImage, b, img, image.Point{})
 		g.Image = append(g.Image, palettedImage)
-		g.Delay = append(g.Delay, 0)
+		g.Delay = append(g.Delay, ugoiraResp.Frames[i].Delay/10)
 		rc.Close()
 	}
 
