@@ -212,8 +212,6 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 		cleanedCaption = illustResp.Caption
 	}
 
-	fmt.Println(urls)
-
 	return &ParsedHibiApiIllust{
 		Nsfw:    nsfw,
 		Urls:    urls,
