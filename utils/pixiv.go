@@ -141,7 +141,7 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 
 func ConvertPixivImage(original string) string {
 	path := strings.Split(original, "https://i.pximg.net/")[1]
-	mirrorUrl := "https://pximg.jackli.dev/" + path
+	mirrorUrl := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/proxy/" + path
 
 	return mirrorUrl
 }
@@ -180,20 +180,21 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 	if illustResp == nil {
 		return nil, false
 	}
+	mainUrl := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/proxy/"
 	ugoira := illustResp.Type == "ugoira"
 	nsfw := illustResp.SanityLevel >= 5
 	urls := []string{}
 	if illustResp.MetaSinglePage.OriginalImageUrl != "" {
 		rawImageUrl := illustResp.MetaSinglePage.OriginalImageUrl
 		path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
-		mirrorUrl := "https://pximg.jackli.dev/" + path
+		mirrorUrl := mainUrl + path
 
 		urls = append(urls, mirrorUrl)
 	} else {
 		for _, page := range illustResp.MetaPages {
 			rawImageUrl := page.ImageUrls.Original
 			path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
-			mirrorUrl := "https://pximg.jackli.dev/" + path
+			mirrorUrl := mainUrl + path
 
 			urls = append(urls, mirrorUrl)
 		}
@@ -210,6 +211,8 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 	if err != nil {
 		cleanedCaption = illustResp.Caption
 	}
+
+	fmt.Println(urls)
 
 	return &ParsedHibiApiIllust{
 		Nsfw:    nsfw,
