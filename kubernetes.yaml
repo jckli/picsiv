@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: picsiv-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: picsiv
+  template:
+    metadata:
+      labels:
+        app: picsiv
+    spec:
+      containers:
+      - name: picsiv
+        image: jckli/picsiv:latest
+        imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: picsiv-secrets
