@@ -23,6 +23,7 @@ func main() {
 	client := picsiv.Setup(
 		h,
 		bot.NewListenerFunc(picsiv.ReadyEvent),
+		bot.NewListenerFunc(picsiv.OnGuildUpdate),
 		bot.NewListenerFunc(func(e *events.MessageCreate) {
 			commands.OnMessageCreate(e, picsiv)
 		}),

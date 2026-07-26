@@ -12,23 +12,40 @@ import (
 
 var pixivCommand = discord.SlashCommandCreate{
 	Name:        "pixiv",
-	Description: "Gets a random post from Pixiv",
+	Description: "Interact with Pixiv",
 	Options: []discord.ApplicationCommandOption{
-		discord.ApplicationCommandOptionString{
-			Name:         "sort",
-			Description:  "The sort method to get a post from",
-			Required:     false,
-			Autocomplete: true,
+		discord.ApplicationCommandOptionSubCommand{
+			Name:        "random",
+			Description: "Get a random Pixiv post",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:         "sort",
+					Description:  "The sort method to get a post from",
+					Required:     false,
+					Autocomplete: true,
+				},
+				discord.ApplicationCommandOptionString{
+					Name:        "date",
+					Description: "Date to fetch posts from, in the format YYYY-MM-DD",
+					Required:    false,
+				},
+				discord.ApplicationCommandOptionBool{
+					Name:        "nsfw",
+					Description: "Allow NSFW posts",
+					Required:    false,
+				},
+			},
 		},
-		discord.ApplicationCommandOptionString{
-			Name:        "date",
-			Description: "Date to fetch posts from, in the format YYYY-MM-DD",
-			Required:    false,
-		},
-		discord.ApplicationCommandOptionBool{
-			Name:        "nsfw",
-			Description: "Allow NSFW posts",
-			Required:    false,
+		discord.ApplicationCommandOptionSubCommand{
+			Name:        "illust",
+			Description: "Display a Pixiv illust by ID",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "illust",
+					Description: "The Pixiv illust to display (can be URL or ID)",
+					Required:    true,
+				},
+			},
 		},
 	},
 }

@@ -94,3 +94,11 @@ func (b *Bot) InitializeCache() *lru.LRU[string, string] {
 
 	return c
 }
+
+func (b *Bot) OnGuildUpdate(e *events.GuildUpdate) {
+	if e.Guild.MemberCount == 0 && e.OldGuild.MemberCount > 0 {
+		guild := e.Guild
+		guild.MemberCount = e.OldGuild.MemberCount
+		b.Client.Caches().AddGuild(guild)
+	}
+}
