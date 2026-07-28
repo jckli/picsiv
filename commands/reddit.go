@@ -117,7 +117,10 @@ func timeperiodAutocompleteHandler(e *handler.AutocompleteEvent) error {
 }
 
 func RedditHandler(e *handler.CommandEvent) error {
-	e.Respond(discord.InteractionResponseTypeDeferredCreateMessage, nil)
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
 	data := e.SlashCommandInteractionData()
 	subreddit := data.String("subreddit")
 	timeperiod := data.String("timeperiod")
@@ -125,11 +128,10 @@ func RedditHandler(e *handler.CommandEvent) error {
 
 	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok && nsfw &&
 		!channel.NSFW() {
-		embed := discord.NewEmbedBuilder().
-			SetTitle("Error").
-			SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
-			SetColor(0xff524f).
-			Build()
+		embed := discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
+			WithColor(0xff524f)
 		_, err := e.UpdateInteractionResponse(
 			discord.MessageUpdate{
 				Embeds: &[]discord.Embed{embed},
@@ -147,13 +149,12 @@ func RedditHandler(e *handler.CommandEvent) error {
 		return errorHandler(e)
 	}
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("r/" + subreddit).
-		SetURL(resp.Data.Illust).
-		SetColor(0x0096fa).
-		SetImage(resp.Data.Illust).
-		SetFooterText("Powered by https://reddit.jackli.dev/" + subreddit).
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("r/" + subreddit).
+		WithURL(resp.Data.Illust).
+		WithColor(0x0096fa).
+		WithImage(resp.Data.Illust).
+		WithFooterText("Powered by https://reddit.jackli.dev/" + subreddit)
 
 	_, err = e.UpdateInteractionResponse(
 		discord.MessageUpdate{
@@ -164,11 +165,10 @@ func RedditHandler(e *handler.CommandEvent) error {
 }
 
 func errorHandler(e *handler.CommandEvent) error {
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Error").
-		SetDescription("Could not get image from API. Please try again later.").
-		SetColor(0xff524f).
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("Error").
+		WithDescription("Could not get image from API. Please try again later.").
+		WithColor(0xff524f)
 
 	_, err := e.UpdateInteractionResponse(
 		discord.MessageUpdate{

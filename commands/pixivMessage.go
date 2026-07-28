@@ -36,9 +36,9 @@ func isValidURL(toTest string) bool {
 
 func pixivComponents(
 	id, prevPage, nextPage, curPage, maxPage string,
-) []discord.ContainerComponent {
-	return []discord.ContainerComponent{
-		discord.ActionRowComponent{
+) []discord.LayoutComponent {
+	return []discord.LayoutComponent{
+		discord.NewActionRow(
 			discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
 				WithEmoji(discord.ComponentEmoji{Name: "◀"}).
 				WithDisabled(prevPage == "-1"),
@@ -47,13 +47,13 @@ func pixivComponents(
 			discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
 				WithEmoji(discord.ComponentEmoji{Name: "▶"}).
 				WithDisabled(nextPage == "-1"),
-		},
+		),
 	}
 }
 
 func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
-	id := e.Variables["id"]
-	page := e.Variables["page"]
+	id := e.Vars["id"]
+	page := e.Vars["page"]
 
 	resp, found := b.Cache.Get(id)
 	var c utils.PixivCache
@@ -107,16 +107,15 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 
 	pageInt, _ := strconv.Atoi(page)
 
-	embed := discord.NewEmbedBuilder().
-		SetAuthorName(fmt.Sprintf("%s (@%s)", c.Author.Name, c.Author.Account)).
-		SetAuthorIcon(utils.ConvertPixivImage(c.Author.ImageUrl)).
-		SetTitle(c.Title).
-		SetDescription(c.Caption).
-		SetColor(0x0096fa).
-		SetImage(c.Urls[pageInt-1]).
+	embed := discord.NewEmbed().
+		WithAuthorName(fmt.Sprintf("%s (@%s)", c.Author.Name, c.Author.Account)).
+		WithAuthorIcon(utils.ConvertPixivImage(c.Author.ImageUrl)).
+		WithTitle(c.Title).
+		WithDescription(c.Caption).
+		WithColor(0x0096fa).
+		WithImage(c.Urls[pageInt-1]).
 		AddField("👀", strconv.Itoa(c.TotalView), true).
-		AddField("🔖", strconv.Itoa(c.TotalBookmarks), true).
-		Build()
+		AddField("🔖", strconv.Itoa(c.TotalBookmarks), true)
 
 	maxPage := len(c.Urls)
 	prevPage := strconv.Itoa(pageInt - 1)
@@ -132,12 +131,10 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 
 	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr)
 
-	e.UpdateMessage(discord.MessageUpdate{
+	return e.UpdateMessage(discord.MessageUpdate{
 		Embeds:     &[]discord.Embed{embed},
 		Components: &components,
 	})
-
-	return nil
 }
 
 func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
@@ -179,29 +176,24 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				return
 			}
 			nsfw := channel.NSFW()
-			if channel.Type() == 11 {
-				gChannel, ok := e.Client().Caches().GuildMessageChannel(*channel.ParentID())
-				if !ok {
-					return
+			if thread, ok := channel.(discord.GuildThread); ok && thread.ParentID() != nil {
+				gChannel, ok := e.Client().Caches.GuildMessageChannel(*thread.ParentID())
+				if ok {
+					nsfw = gChannel.NSFW()
 				}
-				nsfw = gChannel.NSFW()
-
 			}
 			if !nsfw {
-				embed := discord.NewEmbedBuilder().
-					SetTitle("Error").
-					SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
-					SetColor(0xff524f).
-					Build()
-				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-					Embeds: []discord.Embed{embed},
-					MessageReference: &discord.MessageReference{
-						MessageID: &e.Message.ID,
-					},
-					AllowedMentions: &discord.AllowedMentions{
+				embed := discord.NewEmbed().
+					WithTitle("Error").
+					WithDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
+					WithColor(0xff524f)
+				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
+					WithEmbeds(embed).
+					WithMessageReferenceByID(e.Message.ID).
+					WithAllowedMentions(&discord.AllowedMentions{
 						RepliedUser: false,
-					},
-				})
+					}),
+				)
 				return
 			}
 		}
@@ -222,72 +214,63 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			}
 
 			file := discord.NewFile("ugoira.gif", "", ugoira)
-			embed := discord.NewEmbedBuilder().
-				SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
-				SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
-				SetTitle(illustResp.Title).
-				SetDescription(illust.Caption).
-				SetColor(0x0096fa).
-				SetImage("attachment://ugoira.gif").
+			embed := discord.NewEmbed().
+				WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+				WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+				WithTitle(illustResp.Title).
+				WithDescription(illust.Caption).
+				WithColor(0x0096fa).
+				WithImage("attachment://ugoira.gif").
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
-				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
-				Build()
-			e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-				Embeds: []discord.Embed{embed},
-				Files:  []*discord.File{file},
-				MessageReference: &discord.MessageReference{
-					MessageID: &e.Message.ID,
-				},
-				AllowedMentions: &discord.AllowedMentions{
+				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
+			_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
+				WithEmbeds(embed).
+				WithFiles(file).
+				WithMessageReferenceByID(e.Message.ID).
+				WithAllowedMentions(&discord.AllowedMentions{
 					RepliedUser: false,
-				},
-			})
+				}),
+			)
 			return
 		} else {
 			if len(illust.Urls) > 1 {
-				embed := discord.NewEmbedBuilder().
-					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
-					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
-					SetTitle(illustResp.Title).
-					SetDescription(illust.Caption).
-					SetImage(illust.Urls[0]).
-					SetColor(0x0096fa).
+				embed := discord.NewEmbed().
+					WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+					WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+					WithTitle(illustResp.Title).
+					WithDescription(illust.Caption).
+					WithImage(illust.Urls[0]).
+					WithColor(0x0096fa).
 					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
-					Build()
+					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
 
-				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-					Embeds: []discord.Embed{embed},
-					MessageReference: &discord.MessageReference{
-						MessageID: &e.Message.ID,
-					},
-					Components: components,
-					AllowedMentions: &discord.AllowedMentions{
+				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
+					WithEmbeds(embed).
+					WithComponents(components...).
+					WithMessageReferenceByID(e.Message.ID).
+					WithAllowedMentions(&discord.AllowedMentions{
 						RepliedUser: false,
-					},
-				})
+					}),
+				)
 				return
 			} else {
-				embed := discord.NewEmbedBuilder().
-					SetAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
-					SetAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
-					SetTitle(illustResp.Title).
-					SetDescription(illust.Caption).
-					SetColor(0x0096fa).
-					SetImage(illust.Urls[0]).
+				embed := discord.NewEmbed().
+					WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+					WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+					WithTitle(illustResp.Title).
+					WithDescription(illust.Caption).
+					WithColor(0x0096fa).
+					WithImage(illust.Urls[0]).
 					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true).
-					Build()
-				e.Client().Rest().CreateMessage(e.ChannelID, discord.MessageCreate{
-					Embeds: []discord.Embed{embed},
-					MessageReference: &discord.MessageReference{
-						MessageID: &e.Message.ID,
-					},
-					AllowedMentions: &discord.AllowedMentions{
+					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
+				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
+					WithEmbeds(embed).
+					WithMessageReferenceByID(e.Message.ID).
+					WithAllowedMentions(&discord.AllowedMentions{
 						RepliedUser: false,
-					},
-				})
+					}),
+				)
 				return
 			}
 		}
@@ -296,13 +279,13 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 
 func sendErrorReply(b *dbot.Bot, message string) {
 	id := snowflake.GetEnv("DEV_ERROR_CHANNEL_ID")
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Error").
-		SetDescription(message).
-		SetColor(0xff524f).
-		Build()
+	if id == 0 {
+		return
+	}
+	embed := discord.NewEmbed().
+		WithTitle("Error").
+		WithDescription(message).
+		WithColor(0xff524f)
 
-	b.Client.Rest().CreateMessage(id, discord.MessageCreate{
-		Embeds: []discord.Embed{embed},
-	})
+	_, _ = b.Client.Rest.CreateMessage(id, discord.NewMessageCreate().WithEmbeds(embed))
 }

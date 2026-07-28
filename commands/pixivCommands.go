@@ -114,7 +114,10 @@ func pixivSortAutocompleteHandler(e *handler.AutocompleteEvent) error {
 }
 
 func PixivRandomHandler(e *handler.CommandEvent) error {
-	e.Respond(discord.InteractionResponseTypeDeferredCreateMessage, nil)
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
 	data := e.SlashCommandInteractionData()
 	sort := data.String("sort")
 	date := data.String("date")
@@ -123,30 +126,26 @@ func PixivRandomHandler(e *handler.CommandEvent) error {
 	if date != "" {
 		_, err := time.Parse("2006-01-02", date)
 		if err != nil {
-			embed := discord.NewEmbedBuilder().
-				SetTitle("Error").
-				SetDescription("Invalid date format. Please use the format YYYY-MM-DD").
-				SetColor(0xff524f).
-				Build()
+			embed := discord.NewEmbed().
+				WithTitle("Error").
+				WithDescription("Invalid date format. Please use the format YYYY-MM-DD").
+				WithColor(0xff524f)
 			_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
 				Embeds: &[]discord.Embed{embed},
-			},
-			)
+			})
 			return err
 		}
 	}
 
 	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok && nsfw &&
 		!channel.NSFW() {
-		embed := discord.NewEmbedBuilder().
-			SetTitle("Error").
-			SetDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
-			SetColor(0xff524f).
-			Build()
+		embed := discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
+			WithColor(0xff524f)
 		_, err := e.UpdateInteractionResponse(discord.MessageUpdate{
 			Embeds: &[]discord.Embed{embed},
-		},
-		)
+		})
 		return err
 	}
 
@@ -165,18 +164,16 @@ func PixivRandomHandler(e *handler.CommandEvent) error {
 
 	mirrorImg := utils.ConvertPixivImage(resp.Data.Illust)
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Random Pixiv Post").
-		SetURL(mirrorImg).
-		SetColor(0x0096fa).
-		SetImage(mirrorImg).
-		SetFooterText("Powered by https://pximg.jackli.dev").
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("Random Pixiv Post").
+		WithURL(mirrorImg).
+		WithColor(0x0096fa).
+		WithImage(mirrorImg).
+		WithFooterText("Powered by https://pximg.jackli.dev")
 
 	_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
 		Embeds: &[]discord.Embed{embed},
-	},
-	)
+	})
 
 	return err
 }

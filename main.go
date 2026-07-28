@@ -10,6 +10,8 @@ import (
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/jckli/picsiv/commands"
 	"github.com/jckli/picsiv/dbot"
 	_ "github.com/joho/godotenv/autoload"
@@ -21,10 +23,10 @@ func main() {
 	h := commands.CommandHandlers(picsiv)
 
 	client := picsiv.Setup(
-		h,
-		bot.NewListenerFunc(picsiv.ReadyEvent),
-		bot.NewListenerFunc(picsiv.OnGuildUpdate),
-		bot.NewListenerFunc(func(e *events.MessageCreate) {
+		bot.WithEventListeners(h),
+		bot.WithEventListenerFunc(picsiv.ReadyEvent),
+		bot.WithEventListenerFunc(picsiv.OnGuildUpdate),
+		bot.WithEventListenerFunc(func(e *events.MessageCreate) {
 			commands.OnMessageCreate(e, picsiv)
 		}),
 	)
@@ -36,13 +38,12 @@ func main() {
 	ticker := time.NewTicker(time.Minute * 30)
 	defer ticker.Stop()
 	go func() {
-		for {
-			<-ticker.C
+		for range ticker.C {
 			picsiv.Cache = picsiv.InitializeCache()
 		}
 	}()
 
-	var err error
+	var guildIDs []snowflake.ID
 	if picsiv.Config.DevMode {
 		picsiv.Logger.Info(
 			fmt.Sprintf(
@@ -50,14 +51,14 @@ func main() {
 				picsiv.Config.DevServerID,
 			),
 		)
-		_, err = client.Rest().
-			SetGuildCommands(client.ApplicationID(), picsiv.Config.DevServerID, commands.CommandList)
+		guildIDs = []snowflake.ID{picsiv.Config.DevServerID}
 	} else {
 		picsiv.Logger.Info(
 			"Running in global mode. Syncing commands globally.",
 		)
-		_, err = client.Rest().SetGlobalCommands(client.ApplicationID(), commands.CommandList)
 	}
+
+	err := handler.SyncCommands(client, commands.CommandList, guildIDs)
 	if err != nil {
 		picsiv.Logger.Error(fmt.Sprintf("Failed to sync commands: %s", err.Error()))
 	}
@@ -66,7 +67,7 @@ func main() {
 	defer cancel()
 	err = client.OpenGateway(ctx)
 	if err != nil {
-		picsiv.Logger.Error("Error while connecting: ", err)
+		picsiv.Logger.Error("Error while connecting: " + err.Error())
 	}
 	defer client.Close(context.TODO())
 

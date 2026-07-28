@@ -25,7 +25,7 @@ type Config struct {
 }
 
 type Bot struct {
-	Client  bot.Client
+	Client  *bot.Client
 	Logger  *slog.Logger
 	Version string
 	Cache   *lru.LRU[string, string]
@@ -51,9 +51,8 @@ func New(version string) *Bot {
 	}
 }
 
-func (b *Bot) Setup(listeners ...bot.EventListener) bot.Client {
-	client, err := disgo.New(
-		b.Config.Token,
+func (b *Bot) Setup(opts ...bot.ConfigOpt) *bot.Client {
+	defaultOpts := []bot.ConfigOpt{
 		bot.WithLogger(b.Logger),
 		bot.WithGatewayConfigOpts(
 			gateway.WithIntents(
@@ -62,14 +61,19 @@ func (b *Bot) Setup(listeners ...bot.EventListener) bot.Client {
 				gateway.IntentMessageContent,
 			),
 		),
-		bot.WithEventListeners(listeners...),
 		bot.WithCacheConfigOpts(
-			cache.WithCaches(cache.FlagGuilds),
-			cache.WithCaches(cache.FlagChannels),
+			cache.WithCaches(cache.FlagGuilds, cache.FlagChannels),
 		),
+	}
+
+	opts = append(defaultOpts, opts...)
+
+	client, err := disgo.New(
+		b.Config.Token,
+		opts...,
 	)
 	if err != nil {
-		b.Logger.Error("Error while building DisGo client: ", err)
+		b.Logger.Error("Error while building DisGo client: " + err.Error())
 	}
 
 	return client
@@ -82,7 +86,7 @@ func (b *Bot) ReadyEvent(_ *events.Ready) {
 		gateway.WithOnlineStatus(discord.OnlineStatusOnline),
 	)
 	if err != nil {
-		b.Logger.Error("Error while setting presence: ", err)
+		b.Logger.Error("Error while setting presence: " + err.Error())
 	}
 
 	b.Logger.Info("Bot presence set successfully.")
@@ -99,6 +103,6 @@ func (b *Bot) OnGuildUpdate(e *events.GuildUpdate) {
 	if e.Guild.MemberCount == 0 && e.OldGuild.MemberCount > 0 {
 		guild := e.Guild
 		guild.MemberCount = e.OldGuild.MemberCount
-		b.Client.Caches().AddGuild(guild)
+		b.Client.Caches.AddGuild(guild)
 	}
 }

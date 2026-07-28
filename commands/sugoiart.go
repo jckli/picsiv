@@ -60,7 +60,10 @@ func orientationAutocompleteHandler(e *handler.AutocompleteEvent) error {
 }
 
 func SugoiArtHandler(e *handler.CommandEvent) error {
-	e.Respond(discord.InteractionResponseTypeDeferredCreateMessage, nil)
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
 	data := e.SlashCommandInteractionData()
 	orientation := data.String("orientation")
 
@@ -73,13 +76,12 @@ func SugoiArtHandler(e *handler.CommandEvent) error {
 		return errorHandler(e)
 	}
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("SugoiArt").
-		SetURL(resp.Url).
-		SetColor(0x0096fa).
-		SetImage(resp.Url).
-		SetFooterText("Powered by https://art.hayasaka.moe").
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("SugoiArt").
+		WithURL(resp.Url).
+		WithColor(0x0096fa).
+		WithImage(resp.Url).
+		WithFooterText("Powered by https://art.hayasaka.moe")
 
 	_, err = e.UpdateInteractionResponse(
 		discord.MessageUpdate{

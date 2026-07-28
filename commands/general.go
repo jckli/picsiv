@@ -2,9 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
-	"time"
 )
 
 var startTime = time.Now()
@@ -17,19 +18,17 @@ var pingCommand = discord.SlashCommandCreate{
 func PingHandler(e *handler.CommandEvent) error {
 	var ping string
 	if e.Client().HasGateway() {
-		ping = e.Client().Gateway().Latency().String()
+		ping = e.Client().Gateway.Latency().String()
 	}
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Pong! 🏓").
-		SetDescription("My ping is " + ping).
-		SetColor(0x0096fa).
-		SetTimestamp(e.CreatedAt()).
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("Pong! 🏓").
+		WithDescription("My ping is " + ping).
+		WithColor(0x0096fa).
+		WithTimestamp(e.CreatedAt())
 
-	return e.Respond(
-		discord.InteractionResponseTypeCreateMessage,
-		discord.NewMessageCreateBuilder().SetEmbeds(embed).Build(),
+	return e.CreateMessage(
+		discord.NewMessageCreate().WithEmbeds(embed),
 	)
 }
 
@@ -43,11 +42,10 @@ func InfoHandler(e *handler.CommandEvent) error {
 		guildCount  int
 		memberCount int
 	)
-	e.Client().Caches().GuildsForEach(func(guild discord.Guild) {
-
+	for guild := range e.Client().Caches.Guilds() {
 		guildCount++
 		memberCount += guild.MemberCount
-	})
+	}
 
 	uptime := time.Since(startTime)
 	days := uptime / (24 * time.Hour)
@@ -64,7 +62,7 @@ func InfoHandler(e *handler.CommandEvent) error {
 	}
 	uptimeStr += fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 
-	botUser, _ := e.Client().Caches().SelfUser()
+	botUser, _ := e.Client().Caches.SelfUser()
 
 	description := fmt.Sprintf(
 		"Thanks for using Picsiv bot! Any questions can be brought up in the support server. This bot is also open-source! All code can be found on GitHub (Please leave a star ⭐ if you enjoy the bot).\n\nPrivacy Policy: https://picsiv.hayasaka.moe/privacy\n\n**Server Count:** %d\n**User Count:** %d\n**Bot Uptime**: %s",
@@ -73,28 +71,22 @@ func InfoHandler(e *handler.CommandEvent) error {
 		uptimeStr,
 	)
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Picsiv").
-		SetAuthor("Picsiv", "", *botUser.AvatarURL()).
-		SetColor(0x0096fa).
-		SetDescription(description).
-		SetTimestamp(e.CreatedAt()).
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("Picsiv").
+		WithAuthor("Picsiv", "", botUser.EffectiveAvatarURL()).
+		WithColor(0x0096fa).
+		WithDescription(description).
+		WithTimestamp(e.CreatedAt())
 
-	var actionRow discord.ActionRowComponent
-	actionRow = actionRow.AddComponents(
+	actionRow := discord.NewActionRow(
 		discord.NewLinkButton("Support Server", "https://discord.gg/Fr2BhuCkET"),
-	)
-	actionRow = actionRow.AddComponents(
 		discord.NewLinkButton("GitHub", "https://github.com/jckli/picsiv"),
 	)
 
-	return e.Respond(
-		discord.InteractionResponseTypeCreateMessage,
-		discord.NewMessageCreateBuilder().
-			SetEmbeds(embed).
-			SetContainerComponents(actionRow).
-			Build(),
+	return e.CreateMessage(
+		discord.NewMessageCreate().
+			WithEmbeds(embed).
+			WithComponents(actionRow),
 	)
 }
 
@@ -104,22 +96,20 @@ var helpCommand = discord.SlashCommandCreate{
 }
 
 func HelpHandler(e *handler.CommandEvent) error {
-	botUser, _ := e.Client().Caches().SelfUser()
+	botUser, _ := e.Client().Caches.SelfUser()
 
 	description := fmt.Sprintf(
 		"**ping**: Pong! Shows the current ping of Picsiv.\n**picsiv**: Displays basic information about Picsiv.\n**help**: Displays all commands.\n**reddit**: Gets a random post from an art subreddit.",
 	)
 
-	embed := discord.NewEmbedBuilder().
-		SetTitle("Picsiv Commands").
-		SetAuthor("Picsiv", "", *botUser.AvatarURL()).
-		SetColor(0x0096fa).
-		SetDescription("Picsiv will automatically respond to all `pixiv.net` links with the full image! There is no setup required.").
-		AddField("Commands", description, false).
-		Build()
+	embed := discord.NewEmbed().
+		WithTitle("Picsiv Commands").
+		WithAuthor("Picsiv", "", botUser.EffectiveAvatarURL()).
+		WithColor(0x0096fa).
+		WithDescription("Picsiv will automatically respond to all `pixiv.net` links with the full image! There is no setup required.").
+		AddField("Commands", description, false)
 
-	return e.Respond(
-		discord.InteractionResponseTypeCreateMessage,
-		discord.NewMessageCreateBuilder().SetEmbeds(embed).Build(),
+	return e.CreateMessage(
+		discord.NewMessageCreate().WithEmbeds(embed),
 	)
 }
