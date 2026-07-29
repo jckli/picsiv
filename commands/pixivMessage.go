@@ -84,6 +84,10 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 			return fmt.Errorf("Failed to parse illust.")
 		}
 
+		if len(illust.Urls) > 0 {
+			utils.PrefetchImage(illust.Urls[0])
+		}
+
 		cache := utils.PixivCache{
 			Title:   illustResp.Title,
 			Caption: illust.Caption,
@@ -115,6 +119,10 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 	}
 
 	pageInt, _ := strconv.Atoi(page)
+
+	if pageInt-1 >= 0 && pageInt-1 < len(c.Urls) {
+		utils.PrefetchImage(c.Urls[pageInt-1])
+	}
 
 	embed := discord.NewEmbed().
 		WithAuthorName(fmt.Sprintf("%s (@%s)", c.Author.Name, c.Author.Account)).
@@ -182,6 +190,10 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			b.Logger.Error("Failed to parse Hibi API response for ID: " + id[1])
 			sendErrorReply(b, fmt.Sprintf("Could not parse Hibi API for Pixiv ID: %s\nRequester: %s", id[1], e.Message.Author.ID.String()))
 			return
+		}
+
+		if len(illust.Urls) > 0 {
+			utils.PrefetchImage(illust.Urls[0])
 		}
 
 		if illust.Nsfw {

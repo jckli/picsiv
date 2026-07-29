@@ -139,6 +139,21 @@ func GetPublicApiUrl() string {
 	return strings.TrimSuffix(apiUrl, "/")
 }
 
+func PrefetchImage(url string) {
+	if url == "" {
+		return
+	}
+	go func() {
+		req := fasthttp.AcquireRequest()
+		resp := fasthttp.AcquireResponse()
+		defer fasthttp.ReleaseRequest(req)
+		defer fasthttp.ReleaseResponse(resp)
+		req.Header.SetMethod("GET")
+		req.SetRequestURI(url)
+		_ = client.Do(req, resp)
+	}()
+}
+
 func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 	rs := generateRandomString(10)
 	if mode != "" {
