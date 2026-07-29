@@ -35,10 +35,11 @@ func isValidURL(toTest string) bool {
 }
 
 func pixivComponents(
-	id, prevPage, nextPage, curPage, maxPage string,
+	id, prevPage, nextPage, curPage, maxPage, originalUrl string,
 ) []discord.LayoutComponent {
-	return []discord.LayoutComponent{
-		discord.NewActionRow(
+	row := discord.NewActionRow()
+	if maxPage != "1" {
+		row = row.AddComponents(
 			discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
 				WithEmoji(discord.ComponentEmoji{Name: "◀"}).
 				WithDisabled(prevPage == "-1"),
@@ -47,8 +48,15 @@ func pixivComponents(
 			discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
 				WithEmoji(discord.ComponentEmoji{Name: "▶"}).
 				WithDisabled(nextPage == "-1"),
-		),
+		)
 	}
+	if originalUrl != "" {
+		row = row.AddComponents(
+			discord.NewLinkButton("Full Res", originalUrl).
+				WithEmoji(discord.ComponentEmoji{Name: "🖼️"}),
+		)
+	}
+	return []discord.LayoutComponent{row}
 }
 
 func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
@@ -89,6 +97,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 				ImageUrl: illustResp.User.ProfileImageUrls.Medium,
 			},
 			Urls:           illust.Urls,
+			OriginalUrls:   illust.OriginalUrls,
 			TotalView:      illustResp.TotalView,
 			TotalBookmarks: illustResp.TotalBookmarks,
 		}
@@ -129,7 +138,12 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		nextPage = "-1"
 	}
 
-	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr)
+	origUrl := ""
+	if pageInt-1 >= 0 && pageInt-1 < len(c.OriginalUrls) {
+		origUrl = c.OriginalUrls[pageInt-1]
+	}
+
+	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr, origUrl)
 
 	return e.UpdateMessage(discord.MessageUpdate{
 		Embeds:     &[]discord.Embed{embed},
@@ -233,17 +247,23 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			)
 			return
 		} else {
+			origUrl := ""
+			if len(illust.OriginalUrls) > 0 {
+				origUrl = illust.OriginalUrls[0]
+			}
+
+			embed := discord.NewEmbed().
+				WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+				WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
+				WithTitle(illustResp.Title).
+				WithDescription(illust.Caption).
+				WithColor(0x0096fa).
+				WithImage(illust.Urls[0]).
+				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
+				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
+
 			if len(illust.Urls) > 1 {
-				embed := discord.NewEmbed().
-					WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
-					WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
-					WithTitle(illustResp.Title).
-					WithDescription(illust.Caption).
-					WithImage(illust.Urls[0]).
-					WithColor(0x0096fa).
-					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
-				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
+				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)), origUrl)
 
 				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
 					WithEmbeds(embed).
@@ -255,17 +275,11 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				)
 				return
 			} else {
-				embed := discord.NewEmbed().
-					WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
-					WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
-					WithTitle(illustResp.Title).
-					WithDescription(illust.Caption).
-					WithColor(0x0096fa).
-					WithImage(illust.Urls[0]).
-					AddField("👀", strconv.Itoa(illustResp.TotalView), true).
-					AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
+				components := pixivComponents(id[1], "-1", "-1", "1", "1", origUrl)
+
 				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
 					WithEmbeds(embed).
+					WithComponents(components...).
 					WithMessageReferenceByID(e.Message.ID).
 					WithAllowedMentions(&discord.AllowedMentions{
 						RepliedUser: false,

@@ -77,10 +77,11 @@ type HibiApiIllustResponse struct {
 }
 
 type ParsedHibiApiIllust struct {
-	Nsfw    bool
-	Urls    []string
-	Ugoira  bool
-	Caption string
+	Nsfw         bool
+	Urls         []string
+	OriginalUrls []string
+	Ugoira       bool
+	Caption      string
 }
 
 type HibiApiUgoiraResponse struct {
@@ -109,9 +110,33 @@ type PixivCache struct {
 		Account  string `json:"account"`
 		ImageUrl string `json:"image_url"`
 	} `json:"author"`
-	TotalView      int `json:"total_view"`
-	TotalBookmarks int `json:"total_bookmarks"`
-	Urls           []string
+	TotalView      int      `json:"total_view"`
+	TotalBookmarks int      `json:"total_bookmarks"`
+	Urls           []string `json:"urls"`
+	OriginalUrls   []string `json:"original_urls"`
+}
+
+var markdownConverter = func() *converter.Converter {
+	c := converter.NewConverter(
+		converter.WithPlugins(
+			base.NewBasePlugin(),
+			commonmark.NewCommonmarkPlugin(),
+		),
+	)
+	c.Register.RendererFor("a", converter.TagTypeInline, renderChildrenOnly, converter.PriorityEarly)
+	return c
+}()
+
+func GetPublicApiUrl() string {
+	publicUrl := os.Getenv("PIXIV_PUBLIC_API_URL")
+	if publicUrl != "" {
+		return strings.TrimSuffix(publicUrl, "/")
+	}
+	apiUrl := os.Getenv("PIXIV_API_URL")
+	if strings.HasPrefix(apiUrl, "http://python-monoapi-service") {
+		return "https://pymapi.hayasaka.moe"
+	}
+	return strings.TrimSuffix(apiUrl, "/")
 }
 
 func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
@@ -141,7 +166,7 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 
 func ConvertPixivImage(original string) string {
 	path := strings.Split(original, "https://i.pximg.net/")[1]
-	mirrorUrl := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/proxy/" + path
+	mirrorUrl := GetPublicApiUrl() + "/v1/pixiv/illust/proxy/" + path
 
 	return mirrorUrl
 }
@@ -180,43 +205,65 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 	if illustResp == nil {
 		return nil, false
 	}
-	mainUrl := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/proxy/"
+	mainUrl := GetPublicApiUrl() + "/v1/pixiv/illust/proxy/"
 	ugoira := illustResp.Type == "ugoira"
 	nsfw := illustResp.SanityLevel >= 5
 	urls := []string{}
-	if illustResp.MetaSinglePage.OriginalImageUrl != "" {
-		rawImageUrl := illustResp.MetaSinglePage.OriginalImageUrl
-		path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
-		mirrorUrl := mainUrl + path
+	originalUrls := []string{}
 
-		urls = append(urls, mirrorUrl)
-	} else {
+	if len(illustResp.MetaPages) > 0 {
 		for _, page := range illustResp.MetaPages {
-			rawImageUrl := page.ImageUrls.Original
-			path := strings.Split(rawImageUrl, "https://i.pximg.net/")[1]
-			mirrorUrl := mainUrl + path
+			rawLargeUrl := page.ImageUrls.Large
+			if rawLargeUrl == "" {
+				rawLargeUrl = page.ImageUrls.Medium
+			}
+			if rawLargeUrl == "" {
+				rawLargeUrl = page.ImageUrls.Original
+			}
+			largePath := strings.Split(rawLargeUrl, "https://i.pximg.net/")[1]
+			urls = append(urls, mainUrl+largePath)
 
-			urls = append(urls, mirrorUrl)
+			rawOrigUrl := page.ImageUrls.Original
+			if rawOrigUrl == "" {
+				rawOrigUrl = page.ImageUrls.Large
+			}
+			origPath := strings.Split(rawOrigUrl, "https://i.pximg.net/")[1]
+			originalUrls = append(originalUrls, mainUrl+origPath)
+		}
+	} else {
+		rawLargeUrl := illustResp.ImageUrls.Large
+		if rawLargeUrl == "" {
+			rawLargeUrl = illustResp.ImageUrls.Medium
+		}
+		if rawLargeUrl == "" {
+			rawLargeUrl = illustResp.MetaSinglePage.OriginalImageUrl
+		}
+		if rawLargeUrl != "" {
+			largePath := strings.Split(rawLargeUrl, "https://i.pximg.net/")[1]
+			urls = append(urls, mainUrl+largePath)
+		}
+
+		rawOrigUrl := illustResp.MetaSinglePage.OriginalImageUrl
+		if rawOrigUrl == "" {
+			rawOrigUrl = illustResp.ImageUrls.Large
+		}
+		if rawOrigUrl != "" {
+			origPath := strings.Split(rawOrigUrl, "https://i.pximg.net/")[1]
+			originalUrls = append(originalUrls, mainUrl+origPath)
 		}
 	}
 
-	conv := converter.NewConverter(
-		converter.WithPlugins(
-			base.NewBasePlugin(),
-			commonmark.NewCommonmarkPlugin(),
-		),
-	)
-	conv.Register.RendererFor("a", converter.TagTypeInline, renderChildrenOnly, converter.PriorityEarly)
-	cleanedCaption, err := conv.ConvertString(illustResp.Caption)
+	cleanedCaption, err := markdownConverter.ConvertString(illustResp.Caption)
 	if err != nil {
 		cleanedCaption = illustResp.Caption
 	}
 
 	return &ParsedHibiApiIllust{
-		Nsfw:    nsfw,
-		Urls:    urls,
-		Ugoira:  ugoira,
-		Caption: cleanedCaption,
+		Nsfw:         nsfw,
+		Urls:         urls,
+		OriginalUrls: originalUrls,
+		Ugoira:       ugoira,
+		Caption:      cleanedCaption,
 	}, true
 }
 
