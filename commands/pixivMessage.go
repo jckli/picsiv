@@ -35,27 +35,21 @@ func isValidURL(toTest string) bool {
 }
 
 func pixivComponents(
-	id, prevPage, nextPage, curPage, maxPage, originalUrl string,
+	id, prevPage, nextPage, curPage, maxPage string,
 ) []discord.LayoutComponent {
-	row := discord.NewActionRow()
-	if maxPage != "1" {
-		row = row.AddComponents(
-			discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
-				WithEmoji(discord.ComponentEmoji{Name: "◀"}).
-				WithDisabled(prevPage == "-1"),
-			discord.NewSecondaryButton(fmt.Sprintf("%s/%s", curPage, maxPage), "page-counter").
-				WithDisabled(true),
-			discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
-				WithEmoji(discord.ComponentEmoji{Name: "▶"}).
-				WithDisabled(nextPage == "-1"),
-		)
+	if maxPage == "1" || maxPage == "" {
+		return nil
 	}
-	if originalUrl != "" {
-		row = row.AddComponents(
-			discord.NewLinkButton("Full Res", originalUrl).
-				WithEmoji(discord.ComponentEmoji{Name: "🖼️"}),
-		)
-	}
+	row := discord.NewActionRow().AddComponents(
+		discord.NewDangerButton("", "/pixiv/"+id+"/page/"+prevPage).
+			WithEmoji(discord.ComponentEmoji{Name: "◀"}).
+			WithDisabled(prevPage == "-1"),
+		discord.NewSecondaryButton(fmt.Sprintf("%s/%s", curPage, maxPage), "page-counter").
+			WithDisabled(true),
+		discord.NewSuccessButton("", "/pixiv/"+id+"/page/"+nextPage).
+			WithEmoji(discord.ComponentEmoji{Name: "▶"}).
+			WithDisabled(nextPage == "-1"),
+	)
 	return []discord.LayoutComponent{row}
 }
 
@@ -146,17 +140,16 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		nextPage = "-1"
 	}
 
-	origUrl := ""
-	if pageInt-1 >= 0 && pageInt-1 < len(c.OriginalUrls) {
-		origUrl = c.OriginalUrls[pageInt-1]
+	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr)
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
 	}
 
-	components := pixivComponents(id, prevPage, nextPage, page, maxPageStr, origUrl)
-
-	return e.UpdateMessage(discord.MessageUpdate{
-		Embeds:     &[]discord.Embed{embed},
-		Components: &components,
-	})
+	return e.UpdateMessage(msgUpdate)
 }
 
 func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
@@ -259,11 +252,6 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			)
 			return
 		} else {
-			origUrl := ""
-			if len(illust.OriginalUrls) > 0 {
-				origUrl = illust.OriginalUrls[0]
-			}
-
 			embed := discord.NewEmbed().
 				WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
 				WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
@@ -274,31 +262,22 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
 				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 
+			msgCreate := discord.NewMessageCreate().
+				WithEmbeds(embed).
+				WithMessageReferenceByID(e.Message.ID).
+				WithAllowedMentions(&discord.AllowedMentions{
+					RepliedUser: false,
+				})
+
 			if len(illust.Urls) > 1 {
-				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)), origUrl)
-
-				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
-					WithEmbeds(embed).
-					WithComponents(components...).
-					WithMessageReferenceByID(e.Message.ID).
-					WithAllowedMentions(&discord.AllowedMentions{
-						RepliedUser: false,
-					}),
-				)
-				return
-			} else {
-				components := pixivComponents(id[1], "-1", "-1", "1", "1", origUrl)
-
-				_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
-					WithEmbeds(embed).
-					WithComponents(components...).
-					WithMessageReferenceByID(e.Message.ID).
-					WithAllowedMentions(&discord.AllowedMentions{
-						RepliedUser: false,
-					}),
-				)
-				return
+				components := pixivComponents(id[1], "-1", "2", "1", strconv.Itoa(len(illust.Urls)))
+				if len(components) > 0 {
+					msgCreate = msgCreate.WithComponents(components...)
+				}
 			}
+
+			_, _ = e.Client().Rest.CreateMessage(e.ChannelID, msgCreate)
+			return
 		}
 	}
 }

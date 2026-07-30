@@ -180,10 +180,11 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 }
 
 func ConvertPixivImage(original string) string {
-	path := strings.Split(original, "https://i.pximg.net/")[1]
-	mirrorUrl := GetPublicApiUrl() + "/v1/pixiv/illust/proxy/" + path
-
-	return mirrorUrl
+	if strings.Contains(original, "https://i.pximg.net/") {
+		path := strings.Split(original, "https://i.pximg.net/")[1]
+		return "https://pximg.jackli.dev/" + path
+	}
+	return original
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
@@ -220,7 +221,7 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 	if illustResp == nil {
 		return nil, false
 	}
-	mainUrl := GetPublicApiUrl() + "/v1/pixiv/illust/proxy/"
+	mainUrl := "https://pximg.jackli.dev/"
 	ugoira := illustResp.Type == "ugoira"
 	nsfw := illustResp.SanityLevel >= 5
 	urls := []string{}
@@ -228,42 +229,28 @@ func ParseHibiApiIllust(illustResp *HibiApiIllustResponse) (*ParsedHibiApiIllust
 
 	if len(illustResp.MetaPages) > 0 {
 		for _, page := range illustResp.MetaPages {
-			rawLargeUrl := page.ImageUrls.Large
-			if rawLargeUrl == "" {
-				rawLargeUrl = page.ImageUrls.Medium
-			}
-			if rawLargeUrl == "" {
-				rawLargeUrl = page.ImageUrls.Original
-			}
-			largePath := strings.Split(rawLargeUrl, "https://i.pximg.net/")[1]
-			urls = append(urls, mainUrl+largePath)
-
 			rawOrigUrl := page.ImageUrls.Original
 			if rawOrigUrl == "" {
 				rawOrigUrl = page.ImageUrls.Large
 			}
+			if rawOrigUrl == "" {
+				rawOrigUrl = page.ImageUrls.Medium
+			}
 			origPath := strings.Split(rawOrigUrl, "https://i.pximg.net/")[1]
+			urls = append(urls, mainUrl+origPath)
 			originalUrls = append(originalUrls, mainUrl+origPath)
 		}
 	} else {
-		rawLargeUrl := illustResp.ImageUrls.Large
-		if rawLargeUrl == "" {
-			rawLargeUrl = illustResp.ImageUrls.Medium
-		}
-		if rawLargeUrl == "" {
-			rawLargeUrl = illustResp.MetaSinglePage.OriginalImageUrl
-		}
-		if rawLargeUrl != "" {
-			largePath := strings.Split(rawLargeUrl, "https://i.pximg.net/")[1]
-			urls = append(urls, mainUrl+largePath)
-		}
-
 		rawOrigUrl := illustResp.MetaSinglePage.OriginalImageUrl
 		if rawOrigUrl == "" {
 			rawOrigUrl = illustResp.ImageUrls.Large
 		}
+		if rawOrigUrl == "" {
+			rawOrigUrl = illustResp.ImageUrls.Medium
+		}
 		if rawOrigUrl != "" {
 			origPath := strings.Split(rawOrigUrl, "https://i.pximg.net/")[1]
+			urls = append(urls, mainUrl+origPath)
 			originalUrls = append(originalUrls, mainUrl+origPath)
 		}
 	}
