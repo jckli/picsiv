@@ -86,10 +86,12 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 			Title:   illustResp.Title,
 			Caption: illust.Caption,
 			Author: struct {
+				ID       int64  `json:"id"`
 				Name     string `json:"name"`
 				Account  string `json:"account"`
 				ImageUrl string `json:"image_url"`
 			}{
+				ID:       illustResp.User.ID,
 				Name:     illustResp.User.Name,
 				Account:  illustResp.User.Account,
 				ImageUrl: illustResp.User.ProfileImageUrls.Medium,
@@ -98,6 +100,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 			OriginalUrls:   illust.OriginalUrls,
 			TotalView:      illustResp.TotalView,
 			TotalBookmarks: illustResp.TotalBookmarks,
+			Tags:           utils.FormatTags(illustResp.Tags),
 		}
 
 		jsonByte, err := json.Marshal(cache)
@@ -118,13 +121,20 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		utils.PrefetchImage(c.Urls[pageInt-1])
 	}
 
+	footerText := c.Tags
+	if footerText == "" {
+		footerText = "Pixiv"
+	}
+
 	embed := discord.NewEmbed().
 		WithAuthorName(fmt.Sprintf("%s (@%s)", c.Author.Name, c.Author.Account)).
+		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", c.Author.ID)).
 		WithAuthorIcon(utils.ConvertPixivImage(c.Author.ImageUrl)).
 		WithTitle(c.Title).
 		WithDescription(c.Caption).
 		WithColor(0x0096fa).
 		WithImage(c.Urls[pageInt-1]).
+		WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
 		AddField("👀", strconv.Itoa(c.TotalView), true).
 		AddField("🔖", strconv.Itoa(c.TotalBookmarks), true)
 
@@ -232,14 +242,21 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				return
 			}
 
+			footerText := utils.FormatTags(illustResp.Tags)
+			if footerText == "" {
+				footerText = "Pixiv"
+			}
+
 			file := discord.NewFile("ugoira.gif", "", ugoira)
 			embed := discord.NewEmbed().
 				WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+				WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", illustResp.User.ID)).
 				WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 				WithTitle(illustResp.Title).
 				WithDescription(illust.Caption).
 				WithColor(0x0096fa).
 				WithImage("attachment://ugoira.gif").
+				WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
 				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 			_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
@@ -252,13 +269,20 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 			)
 			return
 		} else {
+			footerText := utils.FormatTags(illustResp.Tags)
+			if footerText == "" {
+				footerText = "Pixiv"
+			}
+
 			embed := discord.NewEmbed().
 				WithAuthorName(fmt.Sprintf("%s (@%s)", illustResp.User.Name, illustResp.User.Account)).
+				WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", illustResp.User.ID)).
 				WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 				WithTitle(illustResp.Title).
 				WithDescription(illust.Caption).
 				WithColor(0x0096fa).
 				WithImage(illust.Urls[0]).
+				WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
 				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 

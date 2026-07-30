@@ -106,6 +106,7 @@ type PixivCache struct {
 	Title   string `json:"title"`
 	Caption string `json:"caption"`
 	Author  struct {
+		ID       int64  `json:"id"`
 		Name     string `json:"name"`
 		Account  string `json:"account"`
 		ImageUrl string `json:"image_url"`
@@ -114,6 +115,35 @@ type PixivCache struct {
 	TotalBookmarks int      `json:"total_bookmarks"`
 	Urls           []string `json:"urls"`
 	OriginalUrls   []string `json:"original_urls"`
+	Tags           string   `json:"tags"`
+}
+
+func FormatTags(tags []struct {
+	Name           string `json:"name"`
+	TranslatedName string `json:"translated_name"`
+}) string {
+	if len(tags) == 0 {
+		return ""
+	}
+	var result []string
+	maxTags := 8
+	if len(tags) < maxTags {
+		maxTags = len(tags)
+	}
+	for i := 0; i < maxTags; i++ {
+		tagName := tags[i].Name
+		tagName = strings.ReplaceAll(tagName, " ", "_")
+		result = append(result, "#"+tagName)
+	}
+	formatted := strings.Join(result, " ")
+	if len(formatted) > 180 {
+		if idx := strings.LastIndex(formatted[:180], " "); idx != -1 {
+			formatted = formatted[:idx]
+		} else {
+			formatted = formatted[:180]
+		}
+	}
+	return formatted
 }
 
 var markdownConverter = func() *converter.Converter {
