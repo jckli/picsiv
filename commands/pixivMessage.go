@@ -3,6 +3,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -348,3 +349,187 @@ func sendErrorReply(b *dbot.Bot, message string) {
 
 	_, _ = b.Client.Rest.CreateMessage(id, discord.NewMessageCreate().WithEmbeds(embed))
 }
+
+func ParseUserID(input string) string {
+	if match := regexp.MustCompile(`users/(\d+)`).FindStringSubmatch(input); len(match) > 1 {
+		return match[1]
+	}
+	if match := regexp.MustCompile(`member\.php\?id=(\d+)`).FindStringSubmatch(input); len(match) > 1 {
+		return match[1]
+	}
+	input = strings.TrimSpace(input)
+	if regexp.MustCompile(`^\d+$`).MatchString(input) {
+		return input
+	}
+	return ""
+}
+
+func pixivUserComponents(userID string, index int, totalIllusts int, currentIllustID int64, pageCount int) []discord.LayoutComponent {
+	prevIdx := strconv.Itoa(index - 1)
+	nextIdx := strconv.Itoa(index + 1)
+
+	indicatorText := fmt.Sprintf("Illust %d/%d", index+1, totalIllusts)
+	if index == 0 {
+		indicatorText = fmt.Sprintf("Illust %d/%d (Latest)", index+1, totalIllusts)
+	}
+
+	btnPrev := discord.NewDangerButton("◀ Prev", fmt.Sprintf("/pixiv/user/%s/idx/%s", userID, prevIdx)).
+		WithDisabled(index <= 0)
+	btnIndicator := discord.NewSecondaryButton(indicatorText, "user-indicator").
+		WithDisabled(true)
+	btnNext := discord.NewSuccessButton("Next ▶", fmt.Sprintf("/pixiv/user/%s/idx/%s", userID, nextIdx)).
+		WithDisabled(index >= totalIllusts-1)
+
+	btnRandom := discord.NewSecondaryButton("🎲 Random", fmt.Sprintf("/pixiv/user/%s/idx/random", userID))
+
+	row1Btns := []discord.InteractiveComponent{btnPrev, btnIndicator, btnNext}
+	if pageCount > 1 {
+		btnViewPages := discord.NewPrimaryButton(fmt.Sprintf("🖼️ View All %d Images", pageCount), fmt.Sprintf("/pixiv/user/%s/viewillust/%d", userID, currentIllustID))
+		row1Btns = append(row1Btns, btnViewPages)
+	}
+	row1Btns = append(row1Btns, btnRandom)
+
+	row1 := discord.NewActionRow().AddComponents(row1Btns...)
+	return []discord.LayoutComponent{row1}
+}
+
+func BuildPixivUserPost(userID string, index int, isNSFWChannel bool, b *dbot.Bot) (discord.Embed, []discord.LayoutComponent, error) {
+	userResp, err := utils.RequestHibiApiUser(userID)
+	if err != nil || userResp == nil {
+		return discord.Embed{}, nil, fmt.Errorf("Could not contact the API for Pixiv User ID: %s", userID)
+	}
+
+	illusts, err := utils.RequestHibiApiUserIllusts(userID)
+	if err != nil {
+		return discord.Embed{}, nil, fmt.Errorf("Could not fetch illustrations for Pixiv User ID: %s", userID)
+	}
+
+	var filtered []utils.HibiApiIllustResponse
+	for _, ill := range illusts {
+		if !isNSFWChannel && (ill.SanityLevel >= 5 || ill.XRestrict >= 1) {
+			continue
+		}
+		filtered = append(filtered, ill)
+	}
+
+	if len(filtered) == 0 {
+		if !isNSFWChannel {
+			return discord.Embed{}, nil, fmt.Errorf("All recent artworks by this artist are NSFW. Please run this command in a NSFW channel to view them.")
+		}
+		return discord.Embed{}, nil, fmt.Errorf("This artist has no illustrations.")
+	}
+
+	if index < 0 {
+		index = 0
+	}
+	if index >= len(filtered) {
+		index = len(filtered) - 1
+	}
+
+	currentIllust := filtered[index]
+	illust, ok := utils.ParseHibiApiIllust(&currentIllust)
+	if !ok || len(illust.Urls) == 0 {
+		return discord.Embed{}, nil, fmt.Errorf("Could not parse illustration data for ID: %d", currentIllust.ID)
+	}
+
+	utils.PrefetchImage(illust.Urls[0])
+
+	bio := userResp.User.Comment
+	if bio == "" {
+		bio = "No bio provided."
+	}
+	cleanedBio := utils.ConvertMarkdown(bio)
+
+	pubDate := currentIllust.CreateDate
+	if len(pubDate) >= 10 {
+		pubDate = pubDate[:10]
+	}
+
+	embed := discord.NewEmbed().
+		WithAuthorName(fmt.Sprintf("%s (@%s)", userResp.User.Name, userResp.User.Account)).
+		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", userResp.User.ID)).
+		WithAuthorIcon(utils.ConvertPixivImage(userResp.User.ProfileImageUrls.Medium)).
+		WithDescription(cleanedBio).
+		WithColor(0x0096fa).
+		AddField("🎨 Illusts", strconv.Itoa(userResp.Profile.TotalIllusts), true).
+		AddField("📚 Manga", strconv.Itoa(userResp.Profile.TotalManga), true).
+		AddField("👥 Following", strconv.Itoa(userResp.Profile.TotalFollowUsers), true).
+		AddField("Current Illust", fmt.Sprintf("[%s](https://www.pixiv.net/artworks/%d)", currentIllust.Title, currentIllust.ID), false).
+		WithImage(illust.Urls[0]).
+		AddField("👀", strconv.Itoa(currentIllust.TotalView), true).
+		AddField("🔖", strconv.Itoa(currentIllust.TotalBookmarks), true).
+		WithFooterText(fmt.Sprintf("Published %s", pubDate))
+
+	components := pixivUserComponents(userID, index, len(filtered), currentIllust.ID, len(illust.Urls))
+	return embed, components, nil
+}
+
+func PixivUserButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
+	userID := e.Vars["userId"]
+	idxStr := e.Vars["index"]
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	index := 0
+	if idxStr == "random" {
+		illusts, err := utils.RequestHibiApiUserIllusts(userID)
+		if err == nil && len(illusts) > 0 {
+			var validIndices []int
+			for i, ill := range illusts {
+				if nsfw || (ill.SanityLevel < 5 && ill.XRestrict < 1) {
+					validIndices = append(validIndices, i)
+				}
+			}
+			if len(validIndices) > 0 {
+				index = validIndices[rand.Intn(len(validIndices))]
+			}
+		}
+	} else {
+		index, _ = strconv.Atoi(idxStr)
+	}
+
+	embed, components, err := BuildPixivUserPost(userID, index, nsfw, b)
+	if err != nil {
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	return e.UpdateMessage(msgUpdate)
+}
+
+func PixivUserViewIllustButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
+	illustID := e.Vars["illustId"]
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	embed, file, components, buildErr := BuildPixivPost(illustID, nsfw, b)
+	if buildErr != nil {
+		return e.CreateMessage(discord.NewMessageCreate().
+			WithContent(buildErr.Error()).
+			WithEphemeral(true))
+	}
+
+	msgCreate := discord.NewMessageCreate().
+		WithEmbeds(embed)
+	if file != nil {
+		msgCreate = msgCreate.WithFiles(file)
+	}
+	if len(components) > 0 {
+		msgCreate = msgCreate.WithComponents(components...)
+	}
+
+	return e.CreateMessage(msgCreate)
+}
+

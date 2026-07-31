@@ -48,6 +48,17 @@ var pixivCommand = discord.SlashCommandCreate{
 				},
 			},
 		},
+		discord.ApplicationCommandOptionSubCommand{
+			Name:        "user",
+			Description: "Display a Pixiv user profile and browse their works",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "user",
+					Description: "The Pixiv user to display (can be URL or ID)",
+					Required:    true,
+				},
+			},
+		},
 	},
 }
 
@@ -235,6 +246,53 @@ func PixivIllustHandler(e *handler.CommandEvent, b *dbot.Bot) error {
 	}
 	if file != nil {
 		msgUpdate.Files = []*discord.File{file}
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	_, err = e.UpdateInteractionResponse(msgUpdate)
+	return err
+}
+
+func PixivUserHandler(e *handler.CommandEvent, b *dbot.Bot) error {
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
+
+	input := e.SlashCommandInteractionData().String("user")
+	id := ParseUserID(input)
+	if id == "" {
+		embed := discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription("Invalid Pixiv User ID or URL.").
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	embed, components, buildErr := BuildPixivUserPost(id, 0, nsfw, b)
+	if buildErr != nil {
+		embed = discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription(buildErr.Error()).
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
 	}
 	if len(components) > 0 {
 		msgUpdate.Components = &components

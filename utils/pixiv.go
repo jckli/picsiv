@@ -158,6 +158,14 @@ var markdownConverter = func() *converter.Converter {
 	return c
 }()
 
+func ConvertMarkdown(raw string) string {
+	cleaned, err := markdownConverter.ConvertString(raw)
+	if err != nil {
+		return raw
+	}
+	return cleaned
+}
+
 func GetPublicApiUrl() string {
 	publicUrl := os.Getenv("PIXIV_PUBLIC_API_URL")
 	if publicUrl != "" {
@@ -220,6 +228,53 @@ func ConvertPixivImage(original string) string {
 		return "https://pximg.jackli.dev/" + path
 	}
 	return original
+}
+
+type HibiApiUserResponse struct {
+	User struct {
+		ID               int64  `json:"id"`
+		Name             string `json:"name"`
+		Account          string `json:"account"`
+		ProfileImageUrls struct {
+			Medium string `json:"medium"`
+		} `json:"profile_image_urls"`
+		Comment string `json:"comment"`
+	} `json:"user"`
+	Profile struct {
+		TotalIllusts     int `json:"total_illusts"`
+		TotalManga       int `json:"total_manga"`
+		TotalFollowUsers int `json:"total_follow_users"`
+	} `json:"profile"`
+}
+
+func RequestHibiApiUser(id string) (*HibiApiUserResponse, error) {
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/details/" + id
+	resp, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody := HibiApiUserResponse{}
+	if err := json.Unmarshal(resp, &respBody); err != nil {
+		return nil, err
+	}
+
+	return &respBody, nil
+}
+
+func RequestHibiApiUserIllusts(id string) ([]HibiApiIllustResponse, error) {
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/illusts/" + id
+	resp, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var respBody []HibiApiIllustResponse
+	if err := json.Unmarshal(resp, &respBody); err != nil {
+		return nil, err
+	}
+
+	return respBody, nil
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
