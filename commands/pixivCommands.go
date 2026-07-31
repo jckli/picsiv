@@ -76,14 +76,55 @@ var pixivCommand = discord.SlashCommandCreate{
 				},
 			},
 		},
+		discord.ApplicationCommandOptionSubCommand{
+			Name:        "search",
+			Description: "Search Pixiv illustrations by tag or keyword",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:        "query",
+					Description: "The tag or keyword to search for",
+					Required:    true,
+				},
+				discord.ApplicationCommandOptionString{
+					Name:         "type",
+					Description:  "The search type (tag, exact_tag, title_and_caption)",
+					Required:     false,
+					Autocomplete: true,
+				},
+				discord.ApplicationCommandOptionString{
+					Name:         "sort",
+					Description:  "The sort order (date_desc or popular_desc)",
+					Required:     false,
+					Autocomplete: true,
+				},
+				discord.ApplicationCommandOptionBool{
+					Name:        "nsfw",
+					Description: "Allow NSFW search results",
+					Required:    false,
+				},
+			},
+		},
 	},
+}
+
+func pixivTypeAutocompleteHandler(e *handler.AutocompleteEvent) error {
+	choices := []discord.AutocompleteChoice{
+		discord.AutocompleteChoiceString{Name: "Tag (Partial)", Value: "tag"},
+		discord.AutocompleteChoiceString{Name: "Exact Tag", Value: "exact_tag"},
+		discord.AutocompleteChoiceString{Name: "Title & Caption", Value: "title_and_caption"},
+	}
+	return e.AutocompleteResult(choices)
 }
 
 func PixivAutocompleteHandler(e *handler.AutocompleteEvent) error {
 	sortOption, sOk := e.Data.Option("sort")
 	modeOption, mOk := e.Data.Option("mode")
+	typeOption, tOk := e.Data.Option("type")
 	if (sOk && sortOption.Focused) || (mOk && modeOption.Focused) {
 		return pixivSortAutocompleteHandler(e)
+	}
+	if tOk && typeOption.Focused {
+		return pixivTypeAutocompleteHandler(e)
 	}
 	return e.AutocompleteResult(nil)
 }
@@ -350,6 +391,46 @@ func PixivRankingHandler(e *handler.CommandEvent, b *dbot.Bot) error {
 	}
 
 	embed, components, buildErr := BuildPixivRankingPost(mode, date, 0, nsfw, b)
+	if buildErr != nil {
+		embed = discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription(buildErr.Error()).
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	_, err = e.UpdateInteractionResponse(msgUpdate)
+	return err
+}
+
+func PixivSearchHandler(e *handler.CommandEvent, b *dbot.Bot) error {
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
+
+	data := e.SlashCommandInteractionData()
+	query := data.String("query")
+	typeOpt := data.String("type")
+	sortOpt := data.String("sort")
+	nsfwOpt, _ := data.OptBool("nsfw")
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	embed, components, buildErr := BuildPixivSearchPost(query, typeOpt, sortOpt, 0, nsfwOpt, nsfw, b)
 	if buildErr != nil {
 		embed = discord.NewEmbed().
 			WithTitle("Error").

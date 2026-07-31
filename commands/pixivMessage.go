@@ -696,3 +696,186 @@ func PixivRankingButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 	return e.UpdateMessage(msgUpdate)
 }
 
+func pixivSearchComponents(query, typeOpt, sortOpt string, nsfwOpt bool, index int, totalIllusts int, currentIllustID int64, pageCount int) []discord.LayoutComponent {
+	safeQuery := query
+	if safeQuery == "" {
+		safeQuery = "default"
+	}
+	safeQueryEsc := url.QueryEscape(safeQuery)
+
+	safeType := typeOpt
+	if safeType == "" {
+		safeType = "tag"
+	}
+	safeSort := sortOpt
+	if safeSort == "" {
+		safeSort = "date_desc"
+	}
+	nsfwStr := "false"
+	if nsfwOpt {
+		nsfwStr = "true"
+	}
+
+	prevIdx := strconv.Itoa(index - 1)
+	nextIdx := strconv.Itoa(index + 1)
+
+	indicatorText := fmt.Sprintf("Result %d/%d", index+1, totalIllusts)
+
+	btnPrev := discord.NewDangerButton("◀ Prev", fmt.Sprintf("/pixiv/search/%s/%s/%s/%s/idx/%s", safeQueryEsc, safeType, safeSort, nsfwStr, prevIdx)).
+		WithDisabled(index <= 0)
+	btnIndicator := discord.NewSecondaryButton(indicatorText, "search-indicator").
+		WithDisabled(true)
+	btnNext := discord.NewSuccessButton("Next ▶", fmt.Sprintf("/pixiv/search/%s/%s/%s/%s/idx/%s", safeQueryEsc, safeType, safeSort, nsfwStr, nextIdx)).
+		WithDisabled(index >= totalIllusts-1)
+
+	btnRandom := discord.NewSecondaryButton("🎲 Random", fmt.Sprintf("/pixiv/search/%s/%s/%s/%s/idx/random", safeQueryEsc, safeType, safeSort, nsfwStr))
+
+	row1Btns := []discord.InteractiveComponent{btnPrev, btnIndicator, btnNext}
+	if pageCount > 1 {
+		btnViewPages := discord.NewPrimaryButton(fmt.Sprintf("🖼️ View All %d Images", pageCount), fmt.Sprintf("/pixiv/user/search/viewillust/%d", currentIllustID))
+		row1Btns = append(row1Btns, btnViewPages)
+	}
+	row1Btns = append(row1Btns, btnRandom)
+
+	row1 := discord.NewActionRow().AddComponents(row1Btns...)
+	return []discord.LayoutComponent{row1}
+}
+
+func BuildPixivSearchPost(query, typeOpt, sortOpt string, index int, nsfwOpt bool, isNSFWChannel bool, b *dbot.Bot) (discord.Embed, []discord.LayoutComponent, error) {
+	target := "partial_match_for_tags"
+	typeLabel := "Tag (Partial)"
+	switch typeOpt {
+	case "exact_tag":
+		target = "exact_match_for_tags"
+		typeLabel = "Exact Tag"
+	case "title_and_caption":
+		target = "title_and_caption"
+		typeLabel = "Title & Caption"
+	}
+
+	sort := sortOpt
+	if sort == "" {
+		sort = "date_desc"
+	}
+
+	illusts, err := utils.RequestHibiApiSearch(query, target, sort)
+	if err != nil || len(illusts) == 0 {
+		return discord.Embed{}, nil, fmt.Errorf("No illustrations found for search query: %s", query)
+	}
+
+	var filtered []utils.HibiApiIllustResponse
+	for _, ill := range illusts {
+		if !isNSFWChannel && !nsfwOpt && (ill.SanityLevel >= 5 || ill.XRestrict >= 1) {
+			continue
+		}
+		filtered = append(filtered, ill)
+	}
+
+	if len(filtered) == 0 {
+		if !isNSFWChannel {
+			return discord.Embed{}, nil, fmt.Errorf("All search results for '%s' are NSFW. Please run this command in a NSFW channel to view them.", query)
+		}
+		return discord.Embed{}, nil, fmt.Errorf("No illustrations found for search query: %s", query)
+	}
+
+	if index < 0 {
+		index = 0
+	}
+	if index >= len(filtered) {
+		index = len(filtered) - 1
+	}
+
+	currentIllust := filtered[index]
+	illust, ok := utils.ParseHibiApiIllust(&currentIllust)
+	if !ok || len(illust.Urls) == 0 {
+		return discord.Embed{}, nil, fmt.Errorf("Could not parse illustration data for ID: %d", currentIllust.ID)
+	}
+
+	utils.PrefetchImage(illust.Urls[0])
+
+	pubDate := currentIllust.CreateDate
+	if len(pubDate) >= 10 {
+		pubDate = pubDate[:10]
+	}
+
+	embed := discord.NewEmbed().
+		WithAuthorName(fmt.Sprintf("%s (@%s)", currentIllust.User.Name, currentIllust.User.Account)).
+		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", currentIllust.User.ID)).
+		WithAuthorIcon(utils.ConvertPixivImage(currentIllust.User.ProfileImageUrls.Medium)).
+		WithTitle(query).
+		WithURL(fmt.Sprintf("https://www.pixiv.net/tags/%s/artworks", url.QueryEscape(query))).
+		WithDescription(illust.Caption).
+		WithColor(0x0096fa).
+		AddField("Search Query", query, true).
+		AddField("Search Type", typeLabel, true).
+		AddField("Current Illustration", fmt.Sprintf("[%s](https://www.pixiv.net/artworks/%d)", currentIllust.Title, currentIllust.ID), false).
+		WithImage(illust.Urls[0]).
+		WithFooterText(fmt.Sprintf("👀 %s • 🔖 %s • Published %s", strconv.Itoa(currentIllust.TotalView), strconv.Itoa(currentIllust.TotalBookmarks), pubDate))
+
+	components := pixivSearchComponents(query, typeOpt, sortOpt, nsfwOpt, index, len(filtered), currentIllust.ID, len(illust.Urls))
+	return embed, components, nil
+}
+
+func PixivSearchButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
+	queryEsc := e.Vars["query"]
+	query, _ := url.QueryUnescape(queryEsc)
+	typeOpt := e.Vars["type"]
+	sortOpt := e.Vars["sort"]
+	nsfwStr := e.Vars["nsfw"]
+	idxStr := e.Vars["index"]
+
+	if query == "default" {
+		query = ""
+	}
+	if typeOpt == "tag" {
+		typeOpt = ""
+	}
+	if sortOpt == "date_desc" {
+		sortOpt = ""
+	}
+	nsfwOpt := nsfwStr == "true"
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	index := 0
+	if idxStr == "random" {
+		target := "partial_match_for_tags"
+		if typeOpt == "exact_tag" {
+			target = "exact_match_for_tags"
+		} else if typeOpt == "title_and_caption" {
+			target = "title_and_caption"
+		}
+		illusts, err := utils.RequestHibiApiSearch(query, target, sortOpt)
+		if err == nil && len(illusts) > 0 {
+			var validIndices []int
+			for i, ill := range illusts {
+				if nsfw || nsfwOpt || (ill.SanityLevel < 5 && ill.XRestrict < 1) {
+					validIndices = append(validIndices, i)
+				}
+			}
+			if len(validIndices) > 0 {
+				index = validIndices[rand.Intn(len(validIndices))]
+			}
+		}
+	} else {
+		index, _ = strconv.Atoi(idxStr)
+	}
+
+	embed, components, err := BuildPixivSearchPost(query, typeOpt, sortOpt, index, nsfwOpt, nsfw, b)
+	if err != nil {
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	return e.UpdateMessage(msgUpdate)
+}
+

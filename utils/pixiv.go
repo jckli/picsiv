@@ -10,6 +10,7 @@ import (
 	"image/draw"
 	"image/gif"
 	"image/jpeg"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -291,6 +292,28 @@ func RequestHibiApiRanking(mode, date string) ([]HibiApiIllustResponse, error) {
 	}
 
 	resp, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var respBody []HibiApiIllustResponse
+	if err := json.Unmarshal(resp, &respBody); err != nil {
+		return nil, err
+	}
+
+	return respBody, nil
+}
+
+func RequestHibiApiSearch(word, target, sort string) ([]HibiApiIllustResponse, error) {
+	reqUrl := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/search?word=" + url.QueryEscape(word)
+	if target != "" {
+		reqUrl += "&target=" + url.QueryEscape(target)
+	}
+	if sort != "" {
+		reqUrl += "&sort=" + url.QueryEscape(sort)
+	}
+
+	resp, err := getRequest(reqUrl)
 	if err != nil {
 		return nil, err
 	}
