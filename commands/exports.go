@@ -34,7 +34,11 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 		h.Command("/user", func(e *handler.CommandEvent) error {
 			return PixivUserHandler(e, b)
 		})
+		h.Command("/ranking", func(e *handler.CommandEvent) error {
+			return PixivRankingHandler(e, b)
+		})
 		h.Autocomplete("/random", PixivAutocompleteHandler)
+		h.Autocomplete("/ranking", PixivAutocompleteHandler)
 
 		h.Component("/{id}/page/{page}", func(e *handler.ComponentEvent) error {
 			return PixivButtonHandler(e, b)
@@ -44,6 +48,9 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 		})
 		h.Component("/user/{userId}/viewillust/{illustId}", func(e *handler.ComponentEvent) error {
 			return PixivUserViewIllustButtonHandler(e, b)
+		})
+		h.Component("/ranking/{mode}/{date}/idx/{index}", func(e *handler.ComponentEvent) error {
+			return PixivRankingButtonHandler(e, b)
 		})
 	})
 

@@ -59,12 +59,30 @@ var pixivCommand = discord.SlashCommandCreate{
 				},
 			},
 		},
+		discord.ApplicationCommandOptionSubCommand{
+			Name:        "ranking",
+			Description: "Display top ranked Pixiv illustrations",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionString{
+					Name:         "mode",
+					Description:  "The ranking mode (e.g. day, week, month, rookie)",
+					Required:     false,
+					Autocomplete: true,
+				},
+				discord.ApplicationCommandOptionString{
+					Name:        "date",
+					Description: "Date to fetch ranking from, in YYYY-MM-DD format",
+					Required:    false,
+				},
+			},
+		},
 	},
 }
 
 func PixivAutocompleteHandler(e *handler.AutocompleteEvent) error {
 	sortOption, sOk := e.Data.Option("sort")
-	if sOk && sortOption.Focused {
+	modeOption, mOk := e.Data.Option("mode")
+	if (sOk && sortOption.Focused) || (mOk && modeOption.Focused) {
 		return pixivSortAutocompleteHandler(e)
 	}
 	return e.AutocompleteResult(nil)
@@ -301,4 +319,57 @@ func PixivUserHandler(e *handler.CommandEvent, b *dbot.Bot) error {
 	_, err = e.UpdateInteractionResponse(msgUpdate)
 	return err
 }
+
+func PixivRankingHandler(e *handler.CommandEvent, b *dbot.Bot) error {
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
+
+	data := e.SlashCommandInteractionData()
+	mode := data.String("mode")
+	date := data.String("date")
+
+	if date != "" {
+		_, err := time.Parse("2006-01-02", date)
+		if err != nil {
+			embed := discord.NewEmbed().
+				WithTitle("Error").
+				WithDescription("Invalid date format. Please use the format YYYY-MM-DD").
+				WithColor(0xff524f)
+			_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+				Embeds: &[]discord.Embed{embed},
+			})
+			return err
+		}
+	}
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	embed, components, buildErr := BuildPixivRankingPost(mode, date, 0, nsfw, b)
+	if buildErr != nil {
+		embed = discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription(buildErr.Error()).
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	_, err = e.UpdateInteractionResponse(msgUpdate)
+	return err
+}
+
 

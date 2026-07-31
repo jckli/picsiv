@@ -277,6 +277,32 @@ func RequestHibiApiUserIllusts(id string) ([]HibiApiIllustResponse, error) {
 	return respBody, nil
 }
 
+func RequestHibiApiRanking(mode, date string) ([]HibiApiIllustResponse, error) {
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/ranking"
+	var params []string
+	if mode != "" {
+		params = append(params, "mode="+mode)
+	}
+	if date != "" {
+		params = append(params, "date="+date)
+	}
+	if len(params) > 0 {
+		url += "?" + strings.Join(params, "&")
+	}
+
+	resp, err := getRequest(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var respBody []HibiApiIllustResponse
+	if err := json.Unmarshal(resp, &respBody); err != nil {
+		return nil, err
+	}
+
+	return respBody, nil
+}
+
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
 	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/" + id + "/details"
 	resp, err := getRequest(url)

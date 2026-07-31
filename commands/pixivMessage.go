@@ -449,14 +449,16 @@ func BuildPixivUserPost(userID string, index int, isNSFWChannel bool, b *dbot.Bo
 	}
 
 	embed := discord.NewEmbed().
-		WithAuthorName(fmt.Sprintf("%s (@%s)", userResp.User.Name, userResp.User.Account)).
+		WithAuthorName("\u200b").
 		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", userResp.User.ID)).
 		WithAuthorIcon(utils.ConvertPixivImage(userResp.User.ProfileImageUrls.Medium)).
+		WithTitle(fmt.Sprintf("%s (@%s)", userResp.User.Name, userResp.User.Account)).
+		WithURL(fmt.Sprintf("https://www.pixiv.net/users/%d", userResp.User.ID)).
 		WithDescription(cleanedBio).
 		WithColor(0x0096fa).
-		AddField("🎨 Illusts", strconv.Itoa(userResp.Profile.TotalIllusts), true).
-		AddField("📚 Manga", strconv.Itoa(userResp.Profile.TotalManga), true).
-		AddField("👥 Following", strconv.Itoa(userResp.Profile.TotalFollowUsers), true).
+		AddField("🎨Illustrations", strconv.Itoa(userResp.Profile.TotalIllusts), true).
+		AddField("📚Manga", strconv.Itoa(userResp.Profile.TotalManga), true).
+		AddField("👥Following", strconv.Itoa(userResp.Profile.TotalFollowUsers), true).
 		AddField("Current Illustration", fmt.Sprintf("[%s](https://www.pixiv.net/artworks/%d)", currentIllust.Title, currentIllust.ID), false).
 		WithImage(illust.Urls[0]).
 		WithFooterText(fmt.Sprintf("👀 %s • 🔖 %s • Published %s", strconv.Itoa(currentIllust.TotalView), strconv.Itoa(currentIllust.TotalBookmarks), pubDate))
@@ -532,5 +534,165 @@ func PixivUserViewIllustButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) er
 	}
 
 	return e.CreateMessage(msgCreate)
+}
+
+func pixivRankingComponents(mode, date string, index int, totalIllusts int, currentIllustID int64, pageCount int) []discord.LayoutComponent {
+	safeMode := mode
+	if safeMode == "" {
+		safeMode = "default"
+	}
+	safeDate := date
+	if safeDate == "" {
+		safeDate = "latest"
+	}
+
+	prevIdx := strconv.Itoa(index - 1)
+	nextIdx := strconv.Itoa(index + 1)
+
+	indicatorText := fmt.Sprintf("Rank %d/%d", index+1, totalIllusts)
+	if index == 0 {
+		indicatorText = fmt.Sprintf("Rank %d/%d (Top)", index+1, totalIllusts)
+	}
+
+	btnPrev := discord.NewDangerButton("◀ Prev", fmt.Sprintf("/pixiv/ranking/%s/%s/idx/%s", safeMode, safeDate, prevIdx)).
+		WithDisabled(index <= 0)
+	btnIndicator := discord.NewSecondaryButton(indicatorText, "ranking-indicator").
+		WithDisabled(true)
+	btnNext := discord.NewSuccessButton("Next ▶", fmt.Sprintf("/pixiv/ranking/%s/%s/idx/%s", safeMode, safeDate, nextIdx)).
+		WithDisabled(index >= totalIllusts-1)
+
+	btnRandom := discord.NewSecondaryButton("🎲 Random", fmt.Sprintf("/pixiv/ranking/%s/%s/idx/random", safeMode, safeDate))
+
+	row1Btns := []discord.InteractiveComponent{btnPrev, btnIndicator, btnNext}
+	if pageCount > 1 {
+		btnViewPages := discord.NewPrimaryButton(fmt.Sprintf("🖼️ View All %d Images", pageCount), fmt.Sprintf("/pixiv/user/ranking/viewillust/%d", currentIllustID))
+		row1Btns = append(row1Btns, btnViewPages)
+	}
+	row1Btns = append(row1Btns, btnRandom)
+
+	row1 := discord.NewActionRow().AddComponents(row1Btns...)
+	return []discord.LayoutComponent{row1}
+}
+
+func BuildPixivRankingPost(mode, date string, index int, isNSFWChannel bool, b *dbot.Bot) (discord.Embed, []discord.LayoutComponent, error) {
+	illusts, err := utils.RequestHibiApiRanking(mode, date)
+	if err != nil || len(illusts) == 0 {
+		return discord.Embed{}, nil, fmt.Errorf("Could not fetch Pixiv ranking data.")
+	}
+
+	var filtered []utils.HibiApiIllustResponse
+	for _, ill := range illusts {
+		if !isNSFWChannel && (ill.SanityLevel >= 5 || ill.XRestrict >= 1) {
+			continue
+		}
+		filtered = append(filtered, ill)
+	}
+
+	if len(filtered) == 0 {
+		if !isNSFWChannel {
+			return discord.Embed{}, nil, fmt.Errorf("All illustrations in this ranking are NSFW. Please run this command in a NSFW channel to view them.")
+		}
+		return discord.Embed{}, nil, fmt.Errorf("No illustrations found for this ranking.")
+	}
+
+	if index < 0 {
+		index = 0
+	}
+	if index >= len(filtered) {
+		index = len(filtered) - 1
+	}
+
+	currentIllust := filtered[index]
+	illust, ok := utils.ParseHibiApiIllust(&currentIllust)
+	if !ok || len(illust.Urls) == 0 {
+		return discord.Embed{}, nil, fmt.Errorf("Could not parse illustration data for ID: %d", currentIllust.ID)
+	}
+
+	utils.PrefetchImage(illust.Urls[0])
+
+	pubDate := currentIllust.CreateDate
+	if len(pubDate) >= 10 {
+		pubDate = pubDate[:10]
+	}
+
+	displayMode := mode
+	if displayMode == "" {
+		displayMode = "daily"
+	}
+
+	rankVal := fmt.Sprintf("%d/%d", index+1, len(filtered))
+	if index == 0 {
+		rankVal = fmt.Sprintf("🥇 %d/%d (Top)", index+1, len(filtered))
+	} else if index == 1 {
+		rankVal = fmt.Sprintf("🥈 %d/%d", index+1, len(filtered))
+	} else if index == 2 {
+		rankVal = fmt.Sprintf("🥉 %d/%d", index+1, len(filtered))
+	}
+
+	embed := discord.NewEmbed().
+		WithAuthorName(fmt.Sprintf("%s (@%s)", currentIllust.User.Name, currentIllust.User.Account)).
+		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", currentIllust.User.ID)).
+		WithAuthorIcon(utils.ConvertPixivImage(currentIllust.User.ProfileImageUrls.Medium)).
+		WithTitle(currentIllust.Title).
+		WithURL(fmt.Sprintf("https://www.pixiv.net/artworks/%d", currentIllust.ID)).
+		WithDescription(illust.Caption).
+		WithColor(0x0096fa).
+		AddField("Rank", rankVal, true).
+		AddField("Ranking Mode", strings.Title(strings.ReplaceAll(displayMode, "_", " ")), true).
+		WithImage(illust.Urls[0]).
+		WithFooterText(fmt.Sprintf("👀 %s • 🔖 %s • Published %s", strconv.Itoa(currentIllust.TotalView), strconv.Itoa(currentIllust.TotalBookmarks), pubDate))
+
+	components := pixivRankingComponents(mode, date, index, len(filtered), currentIllust.ID, len(illust.Urls))
+	return embed, components, nil
+}
+
+func PixivRankingButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
+	mode := e.Vars["mode"]
+	date := e.Vars["date"]
+	idxStr := e.Vars["index"]
+
+	if mode == "default" {
+		mode = ""
+	}
+	if date == "latest" {
+		date = ""
+	}
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	index := 0
+	if idxStr == "random" {
+		illusts, err := utils.RequestHibiApiRanking(mode, date)
+		if err == nil && len(illusts) > 0 {
+			var validIndices []int
+			for i, ill := range illusts {
+				if nsfw || (ill.SanityLevel < 5 && ill.XRestrict < 1) {
+					validIndices = append(validIndices, i)
+				}
+			}
+			if len(validIndices) > 0 {
+				index = validIndices[rand.Intn(len(validIndices))]
+			}
+		}
+	} else {
+		index, _ = strconv.Atoi(idxStr)
+	}
+
+	embed, components, err := BuildPixivRankingPost(mode, date, index, nsfw, b)
+	if err != nil {
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	return e.UpdateMessage(msgUpdate)
 }
 
