@@ -132,6 +132,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", c.Author.ID)).
 		WithAuthorIcon(utils.ConvertPixivImage(c.Author.ImageUrl)).
 		WithTitle(c.Title).
+		WithURL(fmt.Sprintf("https://www.pixiv.net/artworks/%s", id)).
 		WithDescription(c.Caption).
 		WithColor(0x0096fa).
 		WithImage(c.Urls[pageInt-1]).
@@ -253,6 +254,7 @@ func BuildPixivPost(id string, isNSFWChannel bool, b *dbot.Bot) (discord.Embed, 
 			WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", illustResp.User.ID)).
 			WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 			WithTitle(illustResp.Title).
+			WithURL(fmt.Sprintf("https://www.pixiv.net/artworks/%s", id)).
 			WithDescription(illust.Caption).
 			WithColor(0x0096fa).
 			WithImage("attachment://ugoira.gif").
@@ -268,6 +270,7 @@ func BuildPixivPost(id string, isNSFWChannel bool, b *dbot.Bot) (discord.Embed, 
 		WithAuthorURL(fmt.Sprintf("https://www.pixiv.net/users/%d", illustResp.User.ID)).
 		WithAuthorIcon(utils.ConvertPixivImage(illustResp.User.ProfileImageUrls.Medium)).
 		WithTitle(illustResp.Title).
+		WithURL(fmt.Sprintf("https://www.pixiv.net/artworks/%s", id)).
 		WithDescription(illust.Caption).
 		WithColor(0x0096fa).
 		WithImage(illust.Urls[0]).
