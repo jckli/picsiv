@@ -248,7 +248,7 @@ type HibiApiUserResponse struct {
 }
 
 func RequestHibiApiUser(id string) (*HibiApiUserResponse, error) {
-	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/details/" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/" + id + "/details"
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
@@ -263,7 +263,7 @@ func RequestHibiApiUser(id string) (*HibiApiUserResponse, error) {
 }
 
 func RequestHibiApiUserIllusts(id string) ([]HibiApiIllustResponse, error) {
-	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/illusts/" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/user/" + id + "/illusts"
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func RequestHibiApiUserIllusts(id string) ([]HibiApiIllustResponse, error) {
 }
 
 func RequestHibiApiIllust(id string) (*HibiApiIllustResponse, error) {
-	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/details/" + id
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/" + id + "/details"
 	resp, err := getRequest(url)
 	if err != nil {
 		return nil, err
