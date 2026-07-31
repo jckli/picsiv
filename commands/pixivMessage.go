@@ -134,7 +134,7 @@ func PixivButtonHandler(e *handler.ComponentEvent, b *dbot.Bot) error {
 		WithDescription(c.Caption).
 		WithColor(0x0096fa).
 		WithImage(c.Urls[pageInt-1]).
-		WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
+		WithFooterText(footerText).
 		AddField("👀", strconv.Itoa(c.TotalView), true).
 		AddField("🔖", strconv.Itoa(c.TotalBookmarks), true)
 
@@ -256,7 +256,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				WithDescription(illust.Caption).
 				WithColor(0x0096fa).
 				WithImage("attachment://ugoira.gif").
-				WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
+				WithFooterText(footerText).
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
 				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 			_, _ = e.Client().Rest.CreateMessage(e.ChannelID, discord.NewMessageCreate().
@@ -282,7 +282,7 @@ func OnMessageCreate(e *events.MessageCreate, b *dbot.Bot) {
 				WithDescription(illust.Caption).
 				WithColor(0x0096fa).
 				WithImage(illust.Urls[0]).
-				WithFooter(footerText, "https://s.pximg.net/common/images/apple-touch-icon.png").
+				WithFooterText(footerText).
 				AddField("👀", strconv.Itoa(illustResp.TotalView), true).
 				AddField("🔖", strconv.Itoa(illustResp.TotalBookmarks), true)
 
