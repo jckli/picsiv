@@ -18,7 +18,9 @@ var CommandList = []discord.ApplicationCommandCreate{
 func CommandHandlers(b *dbot.Bot) *handler.Mux {
 	h := handler.New()
 
-	h.Command("/help", HelpHandler)
+	h.Command("/help", func(e *handler.CommandEvent) error {
+		return HelpHandler(e, b)
+	})
 	h.Command("/ping", PingHandler)
 	h.Command("/picsiv", InfoHandler)
 

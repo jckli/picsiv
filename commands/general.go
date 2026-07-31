@@ -2,10 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/jckli/picsiv/dbot"
 )
 
 var startTime = time.Now()
@@ -90,26 +93,59 @@ func InfoHandler(e *handler.CommandEvent) error {
 	)
 }
 
-var helpCommand = discord.SlashCommandCreate{
-	Name:        "help",
-	Description: "Displays all commands",
+var (
+	helpCommand = discord.SlashCommandCreate{
+		Name:        "help",
+		Description: "Displays all commands",
+	}
+
+	cachedHelpEmbed discord.Embed
+	helpOnce        sync.Once
+)
+
+func HelpHandler(e *handler.CommandEvent, b *dbot.Bot) error {
+	if err := e.DeferCreateMessage(false); err != nil {
+		return err
+	}
+
+	helpOnce.Do(func() {
+		cachedHelpEmbed = buildHelpEmbed(b)
+	})
+
+	_, err := e.UpdateInteractionResponse(discord.MessageUpdate{
+		Embeds: &[]discord.Embed{cachedHelpEmbed},
+	})
+	return err
 }
 
-func HelpHandler(e *handler.CommandEvent) error {
-	botUser, _ := e.Client().Caches.SelfUser()
+func buildHelpEmbed(b *dbot.Bot) discord.Embed {
+	var sb strings.Builder
 
-	description := fmt.Sprintf(
-		"**ping**: Pong! Shows the current ping of Picsiv.\n**picsiv**: Displays basic information about Picsiv.\n**help**: Displays all commands.\n**reddit**: Gets a random post from an art subreddit.",
-	)
+	for _, cmd := range CommandList {
+		if slashCmd, ok := cmd.(discord.SlashCommandCreate); ok {
+			sb.WriteString(fmt.Sprintf("**/%s** - %s\n", slashCmd.Name, slashCmd.Description))
+			for _, opt := range slashCmd.Options {
+				if sub, ok := opt.(discord.ApplicationCommandOptionSubCommand); ok {
+					sb.WriteString(fmt.Sprintf("> `/%s %s` - %s\n", slashCmd.Name, sub.Name, sub.Description))
+				}
+				if group, ok := opt.(discord.ApplicationCommandOptionSubCommandGroup); ok {
+					for _, sub := range group.Options {
+						sb.WriteString(fmt.Sprintf("> `/%s %s %s` - %s\n", slashCmd.Name, group.Name, sub.Name, sub.Description))
+					}
+				}
+			}
+			sb.WriteString("\n")
+		}
+	}
 
-	embed := discord.NewEmbed().
-		WithTitle("Picsiv Commands").
-		WithAuthor("Picsiv", "", botUser.EffectiveAvatarURL()).
+	botIcon := ""
+	if self, ok := b.Client.Caches.SelfUser(); ok {
+		botIcon = self.EffectiveAvatarURL()
+	}
+
+	return discord.NewEmbed().
+		WithAuthor("Picsiv", "", botIcon).
+		WithDescription("Picsiv will automatically respond to all `pixiv.net` links with the full image! There is no setup required.\n\n" + sb.String()).
 		WithColor(0x0096fa).
-		WithDescription("Picsiv will automatically respond to all `pixiv.net` links with the full image! There is no setup required.").
-		AddField("Commands", description, false)
-
-	return e.CreateMessage(
-		discord.NewMessageCreate().WithEmbeds(embed),
-	)
+		WithFooterText(fmt.Sprintf("Version: %s", b.Version))
 }
