@@ -23,8 +23,13 @@ func CommandHandlers(b *dbot.Bot) *handler.Mux {
 	h.Command("/picsiv", InfoHandler)
 
 	h.Route("/pixiv", func(h handler.Router) {
-		h.Command("/", PixivRandomHandler)
-		h.Autocomplete("/", PixivAutocompleteHandler)
+		h.Command("/random", func(e *handler.CommandEvent) error {
+			return PixivRandomHandler(e, b)
+		})
+		h.Command("/illust", func(e *handler.CommandEvent) error {
+			return PixivIllustHandler(e, b)
+		})
+		h.Autocomplete("/random", PixivAutocompleteHandler)
 
 		h.Component("/{id}/page/{page}", func(e *handler.ComponentEvent) error {
 			return PixivButtonHandler(e, b)

@@ -97,8 +97,9 @@ type HibiApiUgoiraResponse struct {
 type PximgApiResponse struct {
 	Status int `json:"status"`
 	Data   struct {
-		Illust string `json:"illust"`
-		Nsfw   bool   `json:"nsfw"`
+		Illust     string `json:"illust"`
+		IllustPath string `json:"illust_path"`
+		Nsfw       bool   `json:"nsfw"`
 	} `json:"data"`
 }
 
@@ -193,7 +194,7 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 		date = "&date=" + date
 	}
 
-	url := "https://pximg.jackli.dev/api" + "?_=" + rs + mode + date + "&nsfw=" + strconv.FormatBool(
+	url := os.Getenv("PIXIV_API_URL") + "/v1/pixiv/illust/ranking/random/api" + "?_=" + rs + mode + date + "&nsfw=" + strconv.FormatBool(
 		nsfw,
 	)
 	resp, err := getRequest(url)
@@ -204,6 +205,10 @@ func RequestPximgApi(mode, date string, nsfw bool) (*PximgApiResponse, error) {
 	respBody := PximgApiResponse{}
 	if err := json.Unmarshal(resp, &respBody); err != nil {
 		return nil, err
+	}
+
+	if respBody.Data.Illust == "" && respBody.Data.IllustPath != "" {
+		respBody.Data.Illust = respBody.Data.IllustPath
 	}
 
 	return &respBody, nil

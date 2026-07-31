@@ -7,6 +7,7 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 
+	"github.com/jckli/picsiv/dbot"
 	"github.com/jckli/picsiv/utils"
 )
 
@@ -113,7 +114,7 @@ func pixivSortAutocompleteHandler(e *handler.AutocompleteEvent) error {
 	return e.AutocompleteResult(choices)
 }
 
-func PixivRandomHandler(e *handler.CommandEvent) error {
+func PixivRandomHandler(e *handler.CommandEvent, b *dbot.Bot) error {
 	err := e.DeferCreateMessage(false)
 	if err != nil {
 		return err
@@ -137,8 +138,12 @@ func PixivRandomHandler(e *handler.CommandEvent) error {
 		}
 	}
 
-	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok && nsfw &&
-		!channel.NSFW() {
+	channelNsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		channelNsfw = channel.NSFW()
+	}
+
+	if nsfw && !channelNsfw {
 		embed := discord.NewEmbed().
 			WithTitle("Error").
 			WithDescription("This image is NSFW. Please resend the link in a NSFW channel to view this image.").
@@ -154,26 +159,88 @@ func PixivRandomHandler(e *handler.CommandEvent) error {
 	}
 
 	resp, err := utils.RequestPximgApi(sort, date, nsfw)
-	if err != nil {
+	if err != nil || resp == nil || resp.Status != 200 {
 		return errorHandler(e)
 	}
 
-	if resp.Status != 200 {
+	id := ParseIllustID(resp.Data.Illust)
+	if id == "" {
 		return errorHandler(e)
 	}
 
-	mirrorImg := utils.ConvertPixivImage(resp.Data.Illust)
+	embed, file, components, buildErr := BuildPixivPost(id, channelNsfw, b)
+	if buildErr != nil {
+		embed = discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription(buildErr.Error()).
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
 
-	embed := discord.NewEmbed().
-		WithTitle("Random Pixiv Post").
-		WithURL(mirrorImg).
-		WithColor(0x0096fa).
-		WithImage(mirrorImg).
-		WithFooterText("Powered by https://pximg.jackli.dev")
-
-	_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+	msgUpdate := discord.MessageUpdate{
 		Embeds: &[]discord.Embed{embed},
-	})
+	}
+	if file != nil {
+		msgUpdate.Files = []*discord.File{file}
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
 
+	_, err = e.UpdateInteractionResponse(msgUpdate)
 	return err
 }
+
+func PixivIllustHandler(e *handler.CommandEvent, b *dbot.Bot) error {
+	err := e.DeferCreateMessage(false)
+	if err != nil {
+		return err
+	}
+
+	input := e.SlashCommandInteractionData().String("illust")
+	id := ParseIllustID(input)
+	if id == "" {
+		embed := discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription("Invalid Pixiv URL or Illust ID.").
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	nsfw := false
+	if channel, ok := e.Channel().MessageChannel.(discord.GuildMessageChannel); ok {
+		nsfw = channel.NSFW()
+	}
+
+	embed, file, components, buildErr := BuildPixivPost(id, nsfw, b)
+	if buildErr != nil {
+		embed = discord.NewEmbed().
+			WithTitle("Error").
+			WithDescription(buildErr.Error()).
+			WithColor(0xff524f)
+		_, err = e.UpdateInteractionResponse(discord.MessageUpdate{
+			Embeds: &[]discord.Embed{embed},
+		})
+		return err
+	}
+
+	msgUpdate := discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	}
+	if file != nil {
+		msgUpdate.Files = []*discord.File{file}
+	}
+	if len(components) > 0 {
+		msgUpdate.Components = &components
+	}
+
+	_, err = e.UpdateInteractionResponse(msgUpdate)
+	return err
+}
+
