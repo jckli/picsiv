@@ -454,11 +454,9 @@ func BuildPixivUserPost(userID string, index int, isNSFWChannel bool, b *dbot.Bo
 		AddField("🎨 Illusts", strconv.Itoa(userResp.Profile.TotalIllusts), true).
 		AddField("📚 Manga", strconv.Itoa(userResp.Profile.TotalManga), true).
 		AddField("👥 Following", strconv.Itoa(userResp.Profile.TotalFollowUsers), true).
-		AddField("Current Illust", fmt.Sprintf("[%s](https://www.pixiv.net/artworks/%d)", currentIllust.Title, currentIllust.ID), false).
+		AddField("Current Illustration", fmt.Sprintf("[%s](https://www.pixiv.net/artworks/%d)", currentIllust.Title, currentIllust.ID), false).
 		WithImage(illust.Urls[0]).
-		AddField("👀", strconv.Itoa(currentIllust.TotalView), true).
-		AddField("🔖", strconv.Itoa(currentIllust.TotalBookmarks), true).
-		WithFooterText(fmt.Sprintf("Published %s", pubDate))
+		WithFooterText(fmt.Sprintf("👀 %s • 🔖 %s • Published %s", strconv.Itoa(currentIllust.TotalView), strconv.Itoa(currentIllust.TotalBookmarks), pubDate))
 
 	components := pixivUserComponents(userID, index, len(filtered), currentIllust.ID, len(illust.Urls))
 	return embed, components, nil
